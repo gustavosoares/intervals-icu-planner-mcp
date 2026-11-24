@@ -1,46 +1,49 @@
+# yaml-language-server: $schema=../../schemas/plan.schema.json
+#
 # 12-week winter base plan: threshold progression, tempo blocks, a weekly
 # outdoor ride, and a recovery week every 4th week.
 # All power targets in the .zwo files are % of FTP, so set your FTP in the
 # app you ride with (Zwift, MyWhoosh, Garmin, ...).
 
+id: winterbase            # every uid: planner-winterbase-w01-tue, ...
 name: Winter Base 12wk
-id: winterbase            # uid prefix: winterbase-w01-tue, winterbase-w01-wed, ...
-start: 2026-11-30         # Monday of week 1 (override with --start)
-weeks: 12
+start: 2026-11-30         # Monday of week 1 (override with start_date / --start)
 workouts_dir: workouts    # relative to this file
 type: Ride
 
-# The default week. Tuesday's key session changes every week (see overrides).
-template:
-  tue: T1_Threshold_3x8.zwo
-  wed: W02_Z2_Endurance_60_Cadence.zwo
-  thu: W04_Z2_60_Neuromuscular_Sprints.zwo
-  sat:
-    note: Outdoor group ride
-    description: >-
-      Long outdoor ride, mostly Z2. Bad weather? Ride W08_Rainy_Saturday_2h
-      indoors instead.
-  sun: W01_Recovery_Spin_45.zwo
+templates:
+  # A build week. Tuesday's key session changes every week (see `weeks`).
+  build:
+    tue: T1_Threshold_3x8.zwo
+    wed: W02_Z2_Endurance_60_Cadence.zwo
+    thu: W04_Z2_60_Neuromuscular_Sprints.zwo
+    sat:
+      note: Outdoor group ride
+      description: >-
+        Long outdoor ride, mostly Z2. Bad weather? Ride W08_Rainy_Saturday_2h
+        indoors instead.
+    sun: W01_Recovery_Spin_45.zwo
 
-# Every 4th week: drop the intensity, keep some easy volume.
-recovery:
-  weeks: [4, 8, 12]
-  template:
+  # Drop the intensity, keep some easy volume.
+  recovery:
     tue: W02_Z2_Endurance_60_Cadence.zwo
     thu: W01_Recovery_Spin_45.zwo
     sat:
       note: Recovery week - easy ride or skip
       description: Keep it conversational. Skipping is fine.
 
-# Per-week changes, merged over that week's template. Use `day: null` to
-# remove a session.
-overrides:
-  1:  { tue: T1_Threshold_3x8.zwo }
-  2:  { tue: W06_Tempo_3x10.zwo, thu: W05_Low_Cadence_Force_5x5.zwo }
-  3:  { tue: T2_Threshold_3x10.zwo }
-  5:  { tue: T3_Threshold_2x15.zwo }
-  6:  { tue: W07_Tempo_2x20.zwo, thu: W05_Low_Cadence_Force_5x5.zwo }
-  7:  { tue: T4_Threshold_3x12.zwo }
-  9:  { tue: T5_Threshold_2x20.zwo }
-  10: { tue: W07_Tempo_2x20.zwo, thu: W05_Low_Cadence_Force_5x5.zwo }
-  11: { tue: T6_Threshold_2x20_Progressed.zwo }
+# Week 1 first. `overrides` are merged over the template, day by day;
+# `day: null` removes a session.
+weeks:
+  - { template: build, overrides: { tue: T1_Threshold_3x8.zwo } }                                # 1
+  - { template: build, overrides: { tue: W06_Tempo_3x10.zwo, thu: W05_Low_Cadence_Force_5x5.zwo } } # 2
+  - { template: build, overrides: { tue: T2_Threshold_3x10.zwo } }                               # 3
+  - { template: recovery, recovery: true }                                                       # 4
+  - { template: build, overrides: { tue: T3_Threshold_2x15.zwo } }                               # 5
+  - { template: build, overrides: { tue: W07_Tempo_2x20.zwo, thu: W05_Low_Cadence_Force_5x5.zwo } } # 6
+  - { template: build, overrides: { tue: T4_Threshold_3x12.zwo } }                               # 7
+  - { template: recovery, recovery: true }                                                       # 8
+  - { template: build, overrides: { tue: T5_Threshold_2x20.zwo } }                               # 9
+  - { template: build, overrides: { tue: W07_Tempo_2x20.zwo, thu: W05_Low_Cadence_Force_5x5.zwo } } # 10
+  - { template: build, overrides: { tue: T6_Threshold_2x20_Progressed.zwo } }                    # 11
+  - { template: recovery, recovery: true }                                                       # 12

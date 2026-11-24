@@ -1,30 +1,77 @@
 [build-system]
-requires = ["setuptools>=61"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
 
 [project]
 name = "intervals-icu-planner-mcp"
 version = "0.1.0"
-description = "Push a multi-week plan of .zwo workouts to an intervals.icu calendar"
+description = "MCP server and CLI to push, inspect and remove whole training plans on intervals.icu, safely"
 readme = "README.md"
-license = { text = "MIT" }
-requires-python = ">=3.9"
-dependencies = ["PyYAML>=5.4"]
-keywords = ["intervals.icu", "zwo", "zwift", "cycling", "training-plan"]
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+dependencies = [
+    "mcp>=2.3,<3",
+    "httpx>=0.27",
+    "pydantic>=2.7",
+    "PyYAML>=6.0",
+]
+keywords = ["intervals.icu", "mcp", "zwo", "zwift", "cycling", "training-plan"]
 classifiers = [
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
+    "Development Status :: 3 - Alpha",
     "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Utilities",
+    "Typing :: Typed",
 ]
 
 [project.optional-dependencies]
-test = ["pytest>=7"]
+dev = [
+    "pytest>=8",
+    "respx>=0.21",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "types-PyYAML",
+]
 
 [project.scripts]
-intervals-icu-planner-mcp = "intervals_icu_planner_mcp.cli:main"
+intervals-icu-planner-mcp = "intervals_icu_planner_mcp.server:main"
+intervals-icu-planner = "intervals_icu_planner_mcp.cli:main"
 
-[tool.setuptools]
-packages = ["intervals_icu_planner_mcp"]
+[project.urls]
+Homepage = "https://github.com/gustavosoares/intervals-icu-planner-mcp"
+Issues = "https://github.com/gustavosoares/intervals-icu-planner-mcp/issues"
+Changelog = "https://github.com/gustavosoares/intervals-icu-planner-mcp/blob/main/CHANGELOG.md"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/intervals_icu_planner_mcp"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+files = ["src", "tests"]
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+disallow_untyped_calls = false
+warn_return_any = false

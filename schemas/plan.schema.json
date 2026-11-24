@@ -1,0 +1,349 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/gustavosoares/intervals-icu-planner-mcp/main/schemas/plan.schema.json",
+  "$defs": {
+    "NoteEntry": {
+      "additionalProperties": false,
+      "description": "A calendar note (e.g. an outdoor ride), no workout file.",
+      "properties": {
+        "note": {
+          "description": "Title of the note",
+          "minLength": 1,
+          "title": "Note",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        }
+      },
+      "required": [
+        "note"
+      ],
+      "title": "NoteEntry",
+      "type": "object"
+    },
+    "Week": {
+      "additionalProperties": false,
+      "description": "One week of the plan, in order: the first item is week 1.",
+      "properties": {
+        "template": {
+          "description": "Name of an entry in `templates`",
+          "minLength": 1,
+          "title": "Template",
+          "type": "string"
+        },
+        "overrides": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WeekDays"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Merged over the template, day by day"
+        },
+        "recovery": {
+          "default": false,
+          "description": "Marks a recovery week (shown in the output)",
+          "title": "Recovery",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "template"
+      ],
+      "title": "Week",
+      "type": "object"
+    },
+    "WeekDays": {
+      "additionalProperties": false,
+      "description": "Day -> session. Days left out have nothing scheduled.\n\nIn a week's ``overrides``, ``day: null`` removes that day's session.",
+      "properties": {
+        "mon": {
+          "anyOf": [
+            {
+              "oneOf": [
+                {
+                  "description": "Shorthand for {workout: <file>}",
+                  "pattern": "\\.zwo$",
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/WorkoutEntry"
+                },
+                {
+                  "$ref": "#/$defs/NoteEntry"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mon"
+        },
+        "tue": {
+          "anyOf": [
+            {
+              "oneOf": [
+                {
+                  "description": "Shorthand for {workout: <file>}",
+                  "pattern": "\\.zwo$",
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/WorkoutEntry"
+                },
+                {
+                  "$ref": "#/$defs/NoteEntry"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tue"
+        },
+        "wed": {
+          "anyOf": [
+            {
+              "oneOf": [
+                {
+                  "description": "Shorthand for {workout: <file>}",
+                  "pattern": "\\.zwo$",
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/WorkoutEntry"
+                },
+                {
+                  "$ref": "#/$defs/NoteEntry"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Wed"
+        },
+        "thu": {
+          "anyOf": [
+            {
+              "oneOf": [
+                {
+                  "description": "Shorthand for {workout: <file>}",
+                  "pattern": "\\.zwo$",
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/WorkoutEntry"
+                },
+                {
+                  "$ref": "#/$defs/NoteEntry"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Thu"
+        },
+        "fri": {
+          "anyOf": [
+            {
+              "oneOf": [
+                {
+                  "description": "Shorthand for {workout: <file>}",
+                  "pattern": "\\.zwo$",
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/WorkoutEntry"
+                },
+                {
+                  "$ref": "#/$defs/NoteEntry"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fri"
+        },
+        "sat": {
+          "anyOf": [
+            {
+              "oneOf": [
+                {
+                  "description": "Shorthand for {workout: <file>}",
+                  "pattern": "\\.zwo$",
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/WorkoutEntry"
+                },
+                {
+                  "$ref": "#/$defs/NoteEntry"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sat"
+        },
+        "sun": {
+          "anyOf": [
+            {
+              "oneOf": [
+                {
+                  "description": "Shorthand for {workout: <file>}",
+                  "pattern": "\\.zwo$",
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/WorkoutEntry"
+                },
+                {
+                  "$ref": "#/$defs/NoteEntry"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sun"
+        }
+      },
+      "title": "WeekDays",
+      "type": "object"
+    },
+    "WorkoutEntry": {
+      "additionalProperties": false,
+      "description": "A planned workout from a .zwo file, with optional name/description overrides.",
+      "properties": {
+        "workout": {
+          "description": ".zwo file name inside workouts_dir",
+          "pattern": "\\.zwo$",
+          "title": "Workout",
+          "type": "string"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Defaults to the <name> in the .zwo",
+          "title": "Name"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        }
+      },
+      "required": [
+        "workout"
+      ],
+      "title": "WorkoutEntry",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "A multi-week training plan for intervals.icu.",
+  "properties": {
+    "id": {
+      "description": "Prefix of every event uid: planner-<id>-w<NN>-<day>. Lowercase letters, digits, - and _",
+      "pattern": "^[a-z0-9][a-z0-9_-]{0,39}$",
+      "title": "Id",
+      "type": "string"
+    },
+    "name": {
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "start": {
+      "description": "Monday of week 1 (YYYY-MM-DD)",
+      "format": "date",
+      "title": "Start",
+      "type": "string"
+    },
+    "workouts_dir": {
+      "default": "workouts",
+      "description": "Folder with the .zwo files, relative to plan.yaml",
+      "title": "Workouts Dir",
+      "type": "string"
+    },
+    "type": {
+      "default": "Ride",
+      "description": "intervals.icu activity type for workouts",
+      "title": "Type",
+      "type": "string"
+    },
+    "templates": {
+      "additionalProperties": {
+        "$ref": "#/$defs/WeekDays"
+      },
+      "description": "Named week templates",
+      "minProperties": 1,
+      "title": "Templates",
+      "type": "object"
+    },
+    "weeks": {
+      "items": {
+        "$ref": "#/$defs/Week"
+      },
+      "maxItems": 99,
+      "minItems": 1,
+      "title": "Weeks",
+      "type": "array"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "start",
+    "templates",
+    "weeks"
+  ],
+  "title": "plan.yaml",
+  "type": "object"
+}
