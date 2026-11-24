@@ -285,6 +285,12 @@ The code is in [`src/intervals_icu_planner_mcp/`](src/intervals_icu_planner_mcp/
 `diff.py` hold the plan logic. `planner.py` has the operations, shared by
 `server.py` (MCP) and `cli.py`. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## A note on AI assistance
+
+This project is built with help from AI coding tools, which speed up writing code, tests
+and documentation. Every change is reviewed and tested by a human maintainer before it's
+merged, and the maintainer is responsible for what ships, including the safety rules above.
+
 ## License
 
 MIT, see [LICENSE](LICENSE).
