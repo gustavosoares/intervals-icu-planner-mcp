@@ -4,7 +4,7 @@ import os
 import re
 from collections import Counter
 
-from zwo_plan_pusher.plan import load_plan
+from intervals_icu_planner_mcp.plan import load_plan
 
 
 def test_example_plan_loads(example_plan):

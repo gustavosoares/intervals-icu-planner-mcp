@@ -23,7 +23,7 @@ def _date(value: str) -> dt.date:
 
 def parse_args(argv: Optional[List[str]]) -> argparse.Namespace:
     ap = argparse.ArgumentParser(
-        prog="zwo-plan-pusher",
+        prog="intervals-icu-planner-mcp",
         description="Push a multi-week plan of .zwo workouts to your intervals.icu calendar.",
     )
     ap.add_argument("plan", help="path to plan.yaml")

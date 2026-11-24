@@ -1,10 +1,10 @@
-# zwo-plan-pusher
+# intervals-icu-planner-mcp
 
 Push a multi-week training plan of `.zwo` workouts to your
 [intervals.icu](https://intervals.icu) calendar from one YAML file.
 
 You describe the plan once: a start Monday, a weekly template, per-week
-changes, recovery weeks, and notes for outdoor rides. `zwo-plan-pusher` turns
+changes, recovery weeks, and notes for outdoor rides. `intervals-icu-planner-mcp` turns
 that into dated calendar events and uploads them in one request. Every event
 has a stable id, so you can edit the plan and run it again: existing entries
 are updated in place, not duplicated.
@@ -20,8 +20,8 @@ intervals.icu then syncs the planned workouts to Zwift, MyWhoosh and Garmin
 ## Quick start
 
 ```sh
-git clone https://github.com/<you>/zwo-plan-pusher.git
-cd zwo-plan-pusher
+git clone https://github.com/gustavosoares/intervals-icu-planner-mcp.git
+cd intervals-icu-planner-mcp
 pip install -e .            # or just: pip install PyYAML
 
 # 1. See what would be scheduled (no API key needed)
@@ -36,7 +36,7 @@ python push.py examples/winter-base-12wk/plan.yaml
 ```
 
 After `pip install -e .` the same command is also available as
-`zwo-plan-pusher plan.yaml ...`.
+`intervals-icu-planner-mcp plan.yaml ...`.
 
 ### Options
 

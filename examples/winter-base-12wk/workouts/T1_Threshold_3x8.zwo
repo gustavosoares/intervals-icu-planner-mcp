@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <workout_file>
-  <author>zwo-plan-pusher example</author>
+  <author>intervals-icu-planner-mcp example</author>
   <name>Threshold 3x8min</name>
   <description>Winter threshold: 3 x 8min @ 95% FTP, 4min recoveries. Should feel 7-8/10. If rep 1 feels harder than 8/10, lower your FTP setting by ~3%.</description>
   <sportType>bike</sportType>

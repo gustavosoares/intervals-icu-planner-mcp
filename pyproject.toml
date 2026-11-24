@@ -3,7 +3,7 @@ requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "zwo-plan-pusher"
+name = "intervals-icu-planner-mcp"
 version = "0.1.0"
 description = "Push a multi-week plan of .zwo workouts to an intervals.icu calendar"
 readme = "README.md"
@@ -21,10 +21,10 @@ classifiers = [
 test = ["pytest>=7"]
 
 [project.scripts]
-zwo-plan-pusher = "zwo_plan_pusher.cli:main"
+intervals-icu-planner-mcp = "intervals_icu_planner_mcp.cli:main"
 
 [tool.setuptools]
-packages = ["zwo_plan_pusher"]
+packages = ["intervals_icu_planner_mcp"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

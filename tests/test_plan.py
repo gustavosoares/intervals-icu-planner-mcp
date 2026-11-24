@@ -3,7 +3,7 @@ import datetime as dt
 import pytest
 import yaml
 
-from zwo_plan_pusher.plan import PlanError, build_plan, load_plan, parse_zwo
+from intervals_icu_planner_mcp.plan import PlanError, build_plan, load_plan, parse_zwo
 
 
 def base(**kw):

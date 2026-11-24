@@ -1,4 +1,4 @@
-from zwo_plan_pusher.config import find_api_key, parse_dotenv
+from intervals_icu_planner_mcp.config import find_api_key, parse_dotenv
 
 
 def test_parse_dotenv():

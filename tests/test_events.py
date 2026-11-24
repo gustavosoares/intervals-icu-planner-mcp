@@ -2,11 +2,11 @@ import base64
 import datetime as dt
 import json
 
-from zwo_plan_pusher import client as client_mod
-from zwo_plan_pusher.cli import main, matching_ids
-from zwo_plan_pusher.client import Client, auth_header
-from zwo_plan_pusher.events import build_payloads
-from zwo_plan_pusher.plan import build_plan
+from intervals_icu_planner_mcp import client as client_mod
+from intervals_icu_planner_mcp.cli import main, matching_ids
+from intervals_icu_planner_mcp.client import Client, auth_header
+from intervals_icu_planner_mcp.events import build_payloads
+from intervals_icu_planner_mcp.plan import build_plan
 
 
 def make_plan(workouts):
