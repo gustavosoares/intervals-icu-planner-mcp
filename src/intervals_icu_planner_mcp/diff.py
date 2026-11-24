@@ -18,8 +18,13 @@ MARK = {"new": "+", "updated": "~", "unchanged": "="}
 
 
 def event_uid(event: dict[str, Any]) -> str:
-    """The uid of a calendar event as returned by the API (uid, else external_id)."""
-    return str(event.get("uid") or event.get("external_id") or "")
+    """The plan uid of a calendar event: its ``external_id``.
+
+    intervals.icu stores the id we send in ``external_id`` and replaces ``uid``
+    with its own random UUID, so ``uid`` is only a fallback (for display; it
+    never matches a plan's uid pattern).
+    """
+    return str(event.get("external_id") or event.get("uid") or "")
 
 
 def event_date(event: dict[str, Any]) -> str:

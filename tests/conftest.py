@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -93,9 +94,11 @@ def client():
 def cal_event(
     uid: str, date: str, *, id: int, name: str = "x", category: str = "WORKOUT", **kw: Any
 ) -> dict[str, Any]:
+    # As intervals.icu returns it: our id in external_id, its own UUID in uid.
     return {
         "id": id,
-        "uid": uid,
+        "external_id": uid,
+        "uid": str(uuid.uuid5(uuid.NAMESPACE_URL, uid)),
         "start_date_local": f"{date}T00:00:00",
         "name": name,
         "category": category,

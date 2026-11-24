@@ -212,8 +212,9 @@ Each event's uid is `planner-<id>-w<NN>-<day>`, for example
 `planner-winterbase-w03-tue`. The uid has no date in it, so changing a
 workout, or shifting the whole plan with `start_date`, updates the existing
 events instead of adding new ones. Events are sent to
-`POST /api/v1/athlete/0/events/bulk?upsert=true` with the uid in `uid` and
-`external_id`, and the `.zwo` sent as-is in `file_contents`.
+`POST /api/v1/athlete/0/events/bulk?upsert=true` with the plan uid in
+`external_id` (intervals.icu gives every event its own separate `uid`, so
+that field is left alone) and the `.zwo` sent as-is in `file_contents`.
 
 The diff compares date, category, name and (for notes) description. intervals.icu
 doesn't return the original `.zwo`, so a workout is compared by name and

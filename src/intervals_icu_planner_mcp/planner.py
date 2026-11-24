@@ -95,12 +95,12 @@ def _truncate(text: str, n: int) -> str:
 def event_payload(ev: PlannedEvent, event_type: str = "Ride") -> JSON:
     """The intervals.icu event for a planned entry. The .zwo is sent as-is."""
     date = f"{ev.date.isoformat()}T00:00:00"
-    # upsert=true matches on external_id; uid is sent too so the id is visible either way.
+    # The plan uid travels in external_id: upsert=true matches on it, and it's the
+    # field intervals.icu keeps (it replaces `uid` with a server-generated UUID).
     payload: JSON = {
         "category": ev.category,
         "start_date_local": date,
         "name": ev.name,
-        "uid": ev.uid,
         "external_id": ev.uid,
     }
     if ev.category == "NOTE":

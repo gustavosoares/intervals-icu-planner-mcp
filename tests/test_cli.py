@@ -50,7 +50,7 @@ def test_delete_defaults_to_dry_run(monkeypatch, capsys):
                 json=[
                     {
                         "id": 1,
-                        "uid": "planner-winterbase-w01-tue",
+                        "external_id": "planner-winterbase-w01-tue",
                         "start_date_local": "2026-12-01T00:00:00",
                     }
                 ],

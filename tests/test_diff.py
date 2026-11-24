@@ -87,11 +87,20 @@ def test_stale_and_foreign_events(make_plan):
         assert foreign not in out
 
 
-def test_matches_on_external_id_when_uid_missing(make_plan):
+def test_matches_on_external_id_not_the_server_uid(make_plan):
+    """Regression: intervals.icu replaces `uid` with its own UUID and keeps our id
+    in `external_id`. Reading `uid` first made a pushed plan invisible to itself."""
+    plan = make_plan()
+    cal = existing_for(plan)
+    assert all(e["uid"] != e["external_id"] for e in cal)
+    assert compute_diff(plan, cal).count("unchanged") == 5
+
+
+def test_falls_back_to_uid_when_external_id_missing(make_plan):
     plan = make_plan()
     cal = existing_for(plan)
     for e in cal:
-        e["external_id"] = e.pop("uid")
+        e["uid"] = e.pop("external_id")
     assert compute_diff(plan, cal).count("unchanged") == 5
 
 

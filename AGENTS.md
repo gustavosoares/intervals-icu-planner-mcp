@@ -71,14 +71,21 @@ stack, never only in `server.py` or `cli.py`.
 - `POST /athlete/0/events/bulk?upsert=true` matches on **`external_id`**, and
   the docs say only for events "created by the same OAuth application".
   `upsertOnUid=true` matches on `uid` instead, but it's ignored when
-  `upsert=true` is set. We send both `uid` and `external_id`, and use
-  `upsert=true` because the original prototype worked that way with a
-  personal API key. If re-pushes ever duplicate events, switch to
-  `upsertOnUid`.
+  `upsert=true` is set. We use `upsert=true` because the original prototype
+  worked that way with a personal API key. Still unverified: that an
+  *update* push (a changed event) updates in place instead of duplicating.
+  Check with a dry run plus a read-back the first time an event changes.
+- **The plan uid lives in `external_id`.** Verified on a real account:
+  intervals.icu keeps the `external_id` we send but **replaces `uid` with
+  its own random UUID**, so a `uid` we send is discarded (we don't send it).
+  `diff.event_uid()` reads `external_id` first. Reading `uid` first once made
+  a freshly pushed plan invisible to itself (the regression test is in
+  `tests/test_diff.py`). Test fixtures (`conftest.cal_event`) mirror this
+  shape, so keep them that way.
 - `.zwo` contents are sent as-is in `file_contents`, plus `filename`.
 - `PUT /events/bulk-delete` takes `[{"id": n}]` (by id has no OAuth
   restriction; by external_id does). It returns `{"eventsDeleted": n}`.
-- `GET /events` returns `uid`, `external_id`, `moving_time`, `workout_doc`,
+- `GET /events` returns `id`, `uid` (server UUID), `external_id`, `moving_time`, `workout_doc`,
   and so on, but **not the original .zwo**. The diff therefore compares
   workouts by name and duration only, and descriptions only for NOTE events
   (intervals.icu may rewrite workout descriptions).

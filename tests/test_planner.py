@@ -105,7 +105,7 @@ def test_push_apply_sends_only_new_and_updated(api, client, write_plan, make_pla
 
     out = planner.push(write_plan(), client=client, dry_run=False)
     sent = json.loads(api.upsert.calls.last.request.content)
-    assert [e["uid"] for e in sent] == [
+    assert [e["external_id"] for e in sent] == [
         "planner-test-w01-tue",
         "planner-test-w02-sat",
         "planner-test-w03-wed",
@@ -145,12 +145,12 @@ def test_workout_payload(make_plan):
         "name",
         "filename",
         "file_contents",
-        "uid",
         "external_id",
     }
     assert p["start_date_local"] == "2026-12-01T00:00:00"
     assert p["file_contents"] == ev.workout.contents  # sent as-is
-    assert p["uid"] == p["external_id"] == "planner-test-w01-tue"
+    assert p["external_id"] == "planner-test-w01-tue"
+    assert "uid" not in p  # intervals.icu assigns its own
 
 
 def test_note_payload(make_plan):
@@ -160,7 +160,6 @@ def test_note_payload(make_plan):
         "end_date_local": "2026-12-05T00:00:00",
         "name": "Group ride",
         "description": "or indoors",
-        "uid": "planner-test-w01-sat",
         "external_id": "planner-test-w01-sat",
     }
 
