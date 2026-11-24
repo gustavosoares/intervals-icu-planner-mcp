@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workout_file>
+  <author>intervals-icu-planner-mcp example</author>
+  <name>Tempo 60min (2x12)</name>
+  <description>Short winter tempo: 2 x 12min @ 80% FTP inside 60min.</description>
+  <sportType>bike</sportType>
+  <tags><tag name="Tempo"/></tags>
+  <workout>
+    <Warmup Duration="600" PowerLow="0.45" PowerHigh="0.68"><textevent timeoffset="0" message="Easy ramp-up. Settle in, 85-90rpm"/><textevent timeoffset="540" message="Almost done with warmup"/></Warmup>
+    <SteadyState Duration="300" Power="0.650"><textevent timeoffset="0" message="Settle into Z2 @ 65% FTP"/></SteadyState>
+    <SteadyState Duration="720" Power="0.800"><textevent timeoffset="0" message="Tempo 1/2: 12min @ 80% FTP. Comfortably hard, 5-6/10"/><textevent timeoffset="360" message="Halfway"/></SteadyState>
+    <SteadyState Duration="240" Power="0.580"><textevent timeoffset="0" message="Recover 4min"/></SteadyState>
+    <SteadyState Duration="720" Power="0.800"><textevent timeoffset="0" message="Tempo 2/2: 12min @ 80% FTP"/><textevent timeoffset="360" message="Halfway. Smooth, 88-92rpm"/></SteadyState>
+    <SteadyState Duration="720" Power="0.670"><textevent timeoffset="0" message="Z2 finish @ 67% FTP"/></SteadyState>
+    <Cooldown Duration="300" PowerLow="0.60" PowerHigh="0.42"><textevent timeoffset="0" message="Cool down. Nice work - spin it out"/></Cooldown>
+  </workout>
+</workout_file>
