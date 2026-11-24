@@ -126,7 +126,7 @@ Week 3, 2026-12-14  (recovery)
   + 2026-12-16 Wed  WORKOUT  C.zwo
 
 Stale: on the calendar with this plan's uid but no longer in the plan.
-Pushing does not remove them; delete_plan does.
+Pushing keeps them; push with prune=true to delete them.
   ! 2027-01-25  WORKOUT  Gone  planner-test-w09-mon
 
 2 new, 1 updated, 2 unchanged, 1 stale.

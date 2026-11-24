@@ -16,7 +16,7 @@ from typing import Any
 
 from .client import JSON, IntervalsClient
 from .diff import compute_diff, event_date, event_uid, render_diff
-from .plan import PlannedEvent, load_plan, owns_uid, valid_plan_id
+from .plan import Plan, PlannedEvent, load_plan, owns_uid, valid_plan_id
 
 DEFAULT_LOOKBACK = dt.timedelta(days=365)
 DEFAULT_LOOKAHEAD = dt.timedelta(days=730)
@@ -116,15 +116,34 @@ def event_payload(ev: PlannedEvent, event_type: str = "Ride") -> JSON:
     return payload
 
 
+def search_window(plan: Plan, today: dt.date) -> tuple[dt.date, dt.date]:
+    """Where to look for a plan's existing events.
+
+    Wider than the plan's own dates, so events left behind by a shorter or shifted
+    version of the plan are still found (shown as moved or stale).
+    """
+    return (
+        min(plan.start, today - DEFAULT_LOOKBACK),
+        max(plan.end, today + DEFAULT_LOOKAHEAD),
+    )
+
+
 def push(
     plan_path: str,
     *,
     client: IntervalsClient | None,
     start: str | None = None,
     dry_run: bool = True,
+    prune: bool = False,
+    today: Callable[[], dt.date] = dt.date.today,
     apply_hint: str = "dry_run=false",
+    prune_hint: str = "prune=true",
 ) -> str:
     """Validate the plan, diff it against the calendar, and write only if asked.
+
+    ``prune=True`` also deletes stale events (this plan's uids that the plan no
+    longer produces), from today on; past events are never pruned. Without it a
+    push never deletes anything.
 
     With no client a dry run still works: the calendar isn't checked and every
     event shows as new.
@@ -132,16 +151,33 @@ def push(
     plan = load_plan(plan_path, start=start)  # PlanError before any network call
     if not dry_run:
         _require(client)
-    existing = client.list_events(plan.start, plan.end) if client else None
+    now = today()
+    existing = client.list_events(*search_window(plan, now)) if client else None
     diff = compute_diff(plan, existing)
+
+    def render(applied: bool, deleted: int = 0) -> str:
+        return render_diff(
+            diff,
+            applied=applied,
+            apply_hint=apply_hint,
+            prune=prune,
+            prune_hint=prune_hint,
+            today=now,
+            deleted=deleted,
+        )
+
     if dry_run:
-        return render_diff(diff, apply_hint=apply_hint)
+        return render(applied=False)
 
     assert client is not None
     to_send = diff.to_send
     if to_send:
         client.upsert_events([event_payload(e, plan.type) for e in to_send])
-    return render_diff(diff, applied=True)
+    deleted = 0
+    doomed = diff.prunable(now) if prune else []
+    if doomed:  # after the upsert: a failed upsert raises before anything is deleted
+        deleted = _delete_owned(client, plan.id, doomed)
+    return render(applied=True, deleted=deleted)
 
 
 # ------------------------------------------------------------------- planned

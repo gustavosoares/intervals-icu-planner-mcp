@@ -50,6 +50,10 @@ stack, never only in `server.py` or `cli.py`.
 1. **Dry run by default.** `push_plan` and `delete_plan` default to
    `dry_run=True`, and the CLI needs `--apply`. Tests assert that dry runs
    make no write calls (respx routes for POST and PUT stay uncalled).
+   A push deletes only with `prune=True` (opt-in), only stale events of its
+   own plan, only from today on (`Diff.prunable`), and only after the upsert
+   succeeded. Pushes search `planner.search_window()` (a year back, two years
+   ahead, widened to the plan), not just the plan's dates.
 2. **Only its own uids.** Event uid = `planner-<plan_id>-w<NN>-<day>`.
    Ownership is `plan.owns_uid()`, a **full regex match, never `startswith`**,
    because `planner-winter-` would also match plan `winter-base`. Deletion

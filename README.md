@@ -28,7 +28,8 @@ This server works on **whole plans**:
 - **A plan only touches its own events.** Each event carries a uid,
   `planner-<plan_id>-w<NN>-<day>`, and the server never modifies an event
   without one. Your races, notes and other workouts are invisible to it.
-- **Reversible.** `delete_plan` removes exactly the events a plan created.
+- **Reversible.** `delete_plan` removes exactly the events a plan created, and
+  `push_plan` with `prune=true` removes the ones you took out of the plan.
 
 It also reads your fitness (CTL / ATL / Form) and completed activities, so
 you can ask Claude how the block is going.
@@ -147,7 +148,7 @@ Nothing is on your calendar yet. Tell Claude to apply it and it calls
 
 | Tool | What it does | Writes? |
 |---|---|---|
-| `push_plan(plan_yaml, start_date?, dry_run=true)` | Validate a plan, diff it against the calendar, upsert new and updated events | only with `dry_run=false` |
+| `push_plan(plan_yaml, start_date?, dry_run=true, prune=false)` | Validate a plan, diff it against the calendar, upsert new and updated events; with `prune=true` also delete the plan's stale events | only with `dry_run=false` |
 | `get_planned(oldest, newest, plan_id?)` | List planned events; optionally only one plan's | no |
 | `delete_plan(plan_id, dry_run=true, oldest?, newest?)` | Remove every event the plan created, nothing else | only with `dry_run=false` |
 | `get_fitness(oldest, newest)` | CTL, ATL, Form (TSB = CTL − ATL) and Form as % of CTL, per day | no |
@@ -222,6 +223,36 @@ duration: if you change the inside of a workout but keep its name and total
 length, the diff shows it as unchanged and it isn't re-sent. Rename it (or
 change `name:`) to force an update.
 
+### Removing sessions: stale events and `prune`
+
+If you take a session out of the plan (`day: null`, a shorter `weeks` list,
+a different template), the event already on the calendar becomes **stale**:
+it has the plan's uid, but the plan no longer produces it. The diff marks it
+`!`, and a normal push leaves it alone.
+
+Push with `prune=true` (CLI: `--prune`) to delete stale events too. In the
+dry run they show as `-`. Here, a few weeks into the plan, two sessions were
+taken out (`day: null`), one already ridden and one still to come:
+
+```
+Stale: on the calendar with this plan's uid but no longer in the plan.
+Pruning deletes the ones from today on (-); earlier ones are kept (!).
+  - 2026-12-22  WORKOUT  Tempo 60min (2x12)  planner-winterbase-w05-tue
+  ! 2026-11-25  WORKOUT  Z2 Endurance 45min  planner-winterbase-w01-wed  (past, kept)
+
+0 new, 0 updated, 58 unchanged, 2 stale (1 to delete).
+```
+
+Pruning only deletes events dated **today or later**, so your past planned
+sessions stay on the calendar. It runs after the upsert, so if the upsert
+fails nothing is deleted. Like everything else, it only matches this plan's
+own uids.
+
+To find stale events, a push searches one year back and two years ahead
+(further if the plan goes further), not only the plan's own dates. Events
+left behind by a shorter or shifted version of the plan are found too, and
+a shifted plan shows its events as moved rather than new.
+
 ### Example
 
 [`examples/winter-base-12wk/`](examples/winter-base-12wk/) is a 12-week winter
@@ -242,6 +273,8 @@ These rules are the core of the project. Each one is covered by tests.
    server's instructions tell the model to show you that output and wait for
    your OK before calling again with `dry_run=false`. The CLI's write commands
    need `--apply`. Tests assert that a dry run never calls a write endpoint.
+   A push never deletes anything unless you also pass `prune=true` (`--prune`),
+   and pruning never deletes past events.
 2. **Only its own uids.** An event belongs to plan `X` only if its uid fully
    matches `planner-X-w<NN>-<day>`. That's an exact pattern, not a prefix
    test, so plan `winter` can never touch plan `winter-base`. Events without
@@ -309,6 +342,7 @@ export INTERVALS_ICU_API_KEY=your-key-here      # or put it in .env
 intervals-icu-planner push plan.yaml                       # dry run: prints the diff
 intervals-icu-planner push plan.yaml --start 2027-01-04    # shift the plan
 intervals-icu-planner push plan.yaml --apply               # write it
+intervals-icu-planner push plan.yaml --prune --apply       # write it and delete removed sessions
 
 intervals-icu-planner planned 2026-12-01 2026-12-31 [--plan-id winterbase]
 intervals-icu-planner delete winterbase                    # dry run: lists what would go

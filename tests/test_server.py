@@ -22,7 +22,7 @@ def test_tools_and_parameters():
     t = tools()
     assert set(t) == {"push_plan", "get_planned", "delete_plan", "get_fitness", "get_activities"}
     props = {n: tool.input_schema["properties"] for n, tool in t.items()}
-    assert set(props["push_plan"]) == {"plan_yaml", "start_date", "dry_run"}
+    assert set(props["push_plan"]) == {"plan_yaml", "start_date", "dry_run", "prune"}
     assert set(props["delete_plan"]) == {"plan_id", "dry_run", "oldest", "newest"}
     assert set(props["get_planned"]) == {"oldest", "newest", "plan_id"}
     assert t["push_plan"].input_schema["required"] == ["plan_yaml"]
@@ -33,12 +33,13 @@ def test_write_tools_default_to_dry_run():
     t = tools()
     assert t["push_plan"].input_schema["properties"]["dry_run"]["default"] is True
     assert t["delete_plan"].input_schema["properties"]["dry_run"]["default"] is True
+    assert t["push_plan"].input_schema["properties"]["prune"]["default"] is False
 
 
 def test_annotations():
     t = tools()
     assert t["delete_plan"].annotations.destructive_hint is True
-    assert t["push_plan"].annotations.destructive_hint is False
+    assert t["push_plan"].annotations.destructive_hint is True  # can delete with prune
     for name in ("get_planned", "get_fitness", "get_activities"):
         assert t[name].annotations.read_only_hint is True
 
