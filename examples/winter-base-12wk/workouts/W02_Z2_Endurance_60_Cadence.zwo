@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workout_file>
+  <author>intervals-icu-planner-mcp example</author>
+  <name>Z2 Endurance 60min + Cadence Drills</name>
+  <description>Aerobic base at 67-70% FTP with 4 x 1min high-cadence spin-ups for pedalling economy.</description>
+  <sportType>bike</sportType>
+  <tags><tag name="Endurance"/></tags>
+  <workout>
+    <Warmup Duration="600" PowerLow="0.45" PowerHigh="0.68"><textevent timeoffset="0" message="Easy ramp-up. Settle in, 85-90rpm"/><textevent timeoffset="540" message="Almost done with warmup"/></Warmup>
+    <SteadyState Duration="900" Power="0.670"><textevent timeoffset="0" message="Z2 @ 67% FTP. Conversational pace"/></SteadyState>
+    <SteadyState Duration="60" Power="0.620" Cadence="110"><textevent timeoffset="0" message="Spin-up 1/4: 110+rpm, smooth, no bouncing"/></SteadyState>
+    <SteadyState Duration="180" Power="0.680"></SteadyState>
+    <SteadyState Duration="60" Power="0.620" Cadence="110"><textevent timeoffset="0" message="Spin-up 2/4: 110+rpm, smooth, no bouncing"/></SteadyState>
+    <SteadyState Duration="180" Power="0.680"></SteadyState>
+    <SteadyState Duration="60" Power="0.620" Cadence="110"><textevent timeoffset="0" message="Spin-up 3/4: 110+rpm, smooth, no bouncing"/></SteadyState>
+    <SteadyState Duration="180" Power="0.680"></SteadyState>
+    <SteadyState Duration="60" Power="0.620" Cadence="110"><textevent timeoffset="0" message="Spin-up 4/4: 110+rpm, smooth, no bouncing"/></SteadyState>
+    <SteadyState Duration="180" Power="0.680"></SteadyState>
+    <SteadyState Duration="1080" Power="0.700"><textevent timeoffset="0" message="Steady Z2 @ 70% FTP"/><textevent timeoffset="540" message="Stay relaxed: shoulders down, grip loose"/></SteadyState>
+    <Cooldown Duration="300" PowerLow="0.60" PowerHigh="0.42"><textevent timeoffset="0" message="Cool down. Nice work - spin it out"/></Cooldown>
+  </workout>
+</workout_file>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workout_file>
+  <author>intervals-icu-planner-mcp example</author>
+  <name>Z2 Endurance 90min</name>
+  <description>Long indoor aerobic ride, 68-72% FTP. Builds mitochondrial density and fat oxidation.</description>
+  <sportType>bike</sportType>
+  <tags><tag name="Endurance"/></tags>
+  <workout>
+    <Warmup Duration="600" PowerLow="0.45" PowerHigh="0.68"><textevent timeoffset="0" message="Easy ramp-up. Settle in, 85-90rpm"/><textevent timeoffset="540" message="Almost done with warmup"/></Warmup>
+    <SteadyState Duration="1500" Power="0.680"><textevent timeoffset="0" message="Z2 block 1 @ 68% FTP"/><textevent timeoffset="750" message="Drink. Fuel 30-40g carbs/hr for 90min+"/></SteadyState>
+    <SteadyState Duration="300" Power="0.600"><textevent timeoffset="0" message="5min easier"/></SteadyState>
+    <SteadyState Duration="1500" Power="0.700"><textevent timeoffset="0" message="Z2 block 2 @ 70% FTP"/></SteadyState>
+    <SteadyState Duration="300" Power="0.600"><textevent timeoffset="0" message="5min easier"/></SteadyState>
+    <SteadyState Duration="1200" Power="0.720"><textevent timeoffset="0" message="Z2 block 3 @ 72% FTP - top of Z2, not tempo"/></SteadyState>
+    <Cooldown Duration="300" PowerLow="0.60" PowerHigh="0.42"><textevent timeoffset="0" message="Cool down. Nice work - spin it out"/></Cooldown>
+  </workout>
+</workout_file>
