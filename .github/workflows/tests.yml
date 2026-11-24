@@ -23,3 +23,15 @@ jobs:
       - run: pip install -e ".[test]"
       - run: pytest -q
       - run: python push.py examples/winter-base-12wk/plan.yaml --dry-run
+
+  # Single, stable check name for branch protection (matrix jobs report one
+  # check per Python version).
+  checks:
+    name: ci-checks
+    needs: [pytest]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          r="${{ needs.pytest.result }}"
+          [[ "$r" == success || "$r" == skipped ]] || { echo "pytest: $r"; exit 1; }
