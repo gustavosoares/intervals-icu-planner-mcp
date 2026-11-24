@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workout_file>
+  <author>zwo-plan-pusher example</author>
+  <name>Rainy Saturday 2h Endurance + Tempo</name>
+  <description>Indoor replacement for the Saturday outdoor group ride when the weather is awful.</description>
+  <sportType>bike</sportType>
+  <tags><tag name="Endurance"/></tags>
+  <workout>
+    <Warmup Duration="900" PowerLow="0.45" PowerHigh="0.68"><textevent timeoffset="0" message="Easy ramp-up. Settle in, 85-90rpm"/><textevent timeoffset="840" message="Almost done with warmup"/></Warmup>
+    <SteadyState Duration="1500" Power="0.680"><textevent timeoffset="0" message="Z2 @ 68% FTP. Fuel 50-60g carbs/hr"/></SteadyState>
+    <SteadyState Duration="600" Power="0.800"><textevent timeoffset="0" message="Tempo 1/3: 10min @ 80% FTP"/></SteadyState>
+    <SteadyState Duration="600" Power="0.660"><textevent timeoffset="0" message="Back to Z2"/></SteadyState>
+    <SteadyState Duration="600" Power="0.800"><textevent timeoffset="0" message="Tempo 2/3: 10min @ 80% FTP"/></SteadyState>
+    <SteadyState Duration="600" Power="0.660"><textevent timeoffset="0" message="Back to Z2"/></SteadyState>
+    <SteadyState Duration="600" Power="0.800"><textevent timeoffset="0" message="Tempo 3/3: 10min @ 80% FTP"/></SteadyState>
+    <SteadyState Duration="600" Power="0.660"><textevent timeoffset="0" message="Back to Z2"/></SteadyState>
+    <SteadyState Duration="1200" Power="0.680"><textevent timeoffset="0" message="Final Z2 block"/></SteadyState>
+    <Cooldown Duration="300" PowerLow="0.60" PowerHigh="0.42"><textevent timeoffset="0" message="Cool down. Nice work - spin it out"/></Cooldown>
+  </workout>
+</workout_file>

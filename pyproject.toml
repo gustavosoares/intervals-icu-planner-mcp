@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zwo-plan-pusher"
+version = "0.1.0"
+description = "Push a multi-week plan of .zwo workouts to an intervals.icu calendar"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.9"
+dependencies = ["PyYAML>=5.4"]
+keywords = ["intervals.icu", "zwo", "zwift", "cycling", "training-plan"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Environment :: Console",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[project.scripts]
+zwo-plan-pusher = "zwo_plan_pusher.cli:main"
+
+[tool.setuptools]
+packages = ["zwo_plan_pusher"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

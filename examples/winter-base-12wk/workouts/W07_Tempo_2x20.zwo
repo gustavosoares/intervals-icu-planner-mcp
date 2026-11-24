@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workout_file>
+  <author>zwo-plan-pusher example</author>
+  <name>Tempo 2x20min</name>
+  <description>Longer tempo: 2 x 20min @ 83% FTP in a 90min ride. Bread-and-butter diesel work.</description>
+  <sportType>bike</sportType>
+  <tags><tag name="Tempo"/></tags>
+  <workout>
+    <Warmup Duration="720" PowerLow="0.45" PowerHigh="0.68"><textevent timeoffset="0" message="Easy ramp-up. Settle in, 85-90rpm"/><textevent timeoffset="660" message="Almost done with warmup"/></Warmup>
+    <SteadyState Duration="300" Power="0.650"></SteadyState>
+    <SteadyState Duration="1200" Power="0.830"><textevent timeoffset="0" message="Tempo 1/2: 20min @ 83% FTP"/><textevent timeoffset="600" message="Halfway - steady breathing, 88-92rpm"/></SteadyState>
+    <SteadyState Duration="360" Power="0.580"><textevent timeoffset="0" message="Recover"/></SteadyState>
+    <SteadyState Duration="1200" Power="0.830"><textevent timeoffset="0" message="Tempo 2/2: 20min @ 83% FTP"/><textevent timeoffset="600" message="Halfway - steady breathing, 88-92rpm"/></SteadyState>
+    <SteadyState Duration="360" Power="0.580"><textevent timeoffset="0" message="Recover"/></SteadyState>
+    <SteadyState Duration="900" Power="0.680"><textevent timeoffset="0" message="Z2 @ 68% FTP"/></SteadyState>
+    <Cooldown Duration="300" PowerLow="0.60" PowerHigh="0.42"><textevent timeoffset="0" message="Cool down. Nice work - spin it out"/></Cooldown>
+  </workout>
+</workout_file>
