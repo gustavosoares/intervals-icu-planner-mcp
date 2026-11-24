@@ -75,10 +75,10 @@ stack, never only in `server.py` or `cli.py`.
 - `POST /athlete/0/events/bulk?upsert=true` matches on **`external_id`**, and
   the docs say only for events "created by the same OAuth application".
   `upsertOnUid=true` matches on `uid` instead, but it's ignored when
-  `upsert=true` is set. We use `upsert=true` because the original prototype
-  worked that way with a personal API key. Still unverified: that an
-  *update* push (a changed event) updates in place instead of duplicating.
-  Check with a dry run plus a read-back the first time an event changes.
+  `upsert=true` is set. We use `upsert=true`. **Verified with a personal API
+  key:** an update push changes events in place, keeping the same event ids
+  and creating no duplicates, even when the category changes (NOTE →
+  WORKOUT, 12 events).
 - **The plan uid lives in `external_id`.** Verified on a real account:
   intervals.icu keeps the `external_id` we send but **replaces `uid` with
   its own random UUID**, so a `uid` we send is discarded (we don't send it).
