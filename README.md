@@ -39,6 +39,58 @@ you can ask Claude how the block is going.
 
 intervals.icu → **Settings** → **Developer Settings** → **API key**.
 
+#### On a Mac: keep it in the Keychain (recommended)
+
+Don't leave the key in plain text in config files or your shell profile. Store it
+in the macOS Keychain instead:
+
+```sh
+security add-generic-password -a "$USER" -s INTERVALS_ICU_API_KEY -w
+```
+
+With `-w` and no value, `security` asks for the key, so it doesn't end up in
+your shell history. To replace a stored key later, add `-U`.
+
+**For the CLI and Claude Code**, load it into your shell. Add this line to
+`~/.zshrc` (or `~/.bashrc`):
+
+```sh
+export INTERVALS_ICU_API_KEY=$(security find-generic-password -w -a "$USER" -s INTERVALS_ICU_API_KEY)
+```
+
+Then run `source ~/.zshrc`. Programs you start from that shell, including
+`claude`, get the key from the Keychain, and it's never written to a file.
+
+**For Claude Desktop**, the shell profile doesn't help: apps launched from
+the Dock don't read `~/.zshrc`. Have the server read the Keychain when it
+starts instead. Use this config in place of the one in step 2:
+
+```json
+{
+  "mcpServers": {
+    "intervals-icu-planner": {
+      "command": "/bin/sh",
+      "args": [
+        "-c",
+        "INTERVALS_ICU_API_KEY=$(security find-generic-password -w -s INTERVALS_ICU_API_KEY) exec uvx --from git+https://github.com/gustavosoares/intervals-icu-planner-mcp intervals-icu-planner-mcp"
+      ]
+    }
+  }
+}
+```
+
+The same wrapper works in Claude Code if you don't want the key in your shell:
+
+```sh
+claude mcp add intervals-icu-planner -- /bin/sh -c \
+  'INTERVALS_ICU_API_KEY=$(security find-generic-password -w -s INTERVALS_ICU_API_KEY) exec uvx --from git+https://github.com/gustavosoares/intervals-icu-planner-mcp intervals-icu-planner-mcp'
+```
+
+To check the key is stored, run
+`security find-generic-password -s INTERVALS_ICU_API_KEY`. It shows the entry
+but not the key. To remove it, run
+`security delete-generic-password -s INTERVALS_ICU_API_KEY`.
+
 ### 2. Add the server to Claude Desktop
 
 Edit `claude_desktop_config.json` (Claude Desktop → Settings → Developer →
@@ -58,6 +110,9 @@ Edit Config). You need [uv](https://docs.astral.sh/uv/) installed.
   }
 }
 ```
+
+This stores the key in plain text in the config file. On a Mac, use the
+Keychain version above instead.
 
 Once the package is on PyPI this becomes `"args": ["intervals-icu-planner-mcp"]`.
 
