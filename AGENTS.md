@@ -34,7 +34,8 @@ src/intervals_icu_planner_mcp/
   zwo.py       .zwo parse + validation
   plan.py      pydantic models (source of truth for the JSON Schema), uid helpers, expansion
   diff.py      plan vs calendar diff + rendering
-  planner.py   operations shared by both front ends: push/planned/delete/fitness/activities
+  edit.py      round-trip edits of plan.yaml (ruamel.yaml): move a session, shift weeks
+  planner.py   operations shared by both front ends: push/planned/delete/move/shift/fitness/activities/library
   server.py    MCP tools (thin wrappers over planner)
   cli.py       argparse front end (thin wrapper over planner)
   config.py    API key lookup
@@ -111,6 +112,25 @@ stack, never only in `server.py` or `cli.py`.
   as "Error executing tool X".
 - `list_tools()` and `call_tool()` are async. Tool schemas use `input_schema`.
   Annotations take `read_only_hint`, `destructive_hint` and so on.
+
+## Editing plan.yaml (move_workout / shift_plan)
+
+- The plan file is the source of truth. Tools that change the schedule edit
+  the file (`edit.py`), validate the result with `build_plan`, then sync the
+  calendar with prune (`planner._edit_and_sync`). Never move events only on
+  the calendar: the next push would move them back.
+- `edit.py` is pure (text in, text out). ruamel.yaml can't reproduce every
+  layout; for example, it drops the spaces in `{ flow: maps }`. So
+  `_splice()` keeps every line the edit didn't change verbatim from the
+  original, and only changed lines come from ruamel. `_yaml_for()` tries
+  several indent settings to find one that round-trips.
+- uids are week+day, so a move is a delete plus a create, and inserting
+  weeks renumbers everything after them. "Started" means some session is
+  before today; until then `shift_plan` moves `start` instead (in place, no
+  renumbering).
+- Apply order: check the file is unchanged since it was read, write it
+  atomically, then sync. A failed sync after the write says to finish with
+  `push_plan(prune=true)`.
 
 ## Testing conventions
 

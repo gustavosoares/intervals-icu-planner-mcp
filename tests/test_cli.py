@@ -81,3 +81,33 @@ def test_push_prune_without_apply_is_still_a_dry_run(monkeypatch, capsys):
     assert "  - 2099-01-06" in out
     assert "(1 to delete)" in out
     assert "Run again with --apply" in out
+
+
+def test_move_and_shift_without_apply_are_dry_runs(tmp_path, capsys):
+    import shutil
+
+    plan_dir = tmp_path / "plan"
+    shutil.copytree(EXAMPLE.parent, plan_dir)
+    plan = plan_dir / "plan.yaml"
+    before = plan.read_text()
+    # Offline (no key): the plan file must be left alone, and nothing is sent.
+    assert main(["move", str(plan), "12", "tue", "fri"]) == 0
+    out = capsys.readouterr().out
+    assert "moved S3_SweetSpot_3x15.zwo: week 12 tue -> week 12 fri" in out
+    assert "Run again with --apply" in out
+    assert main(["shift", str(plan), "--weeks", "2", "--from-week", "12"]) == 0
+    assert "inserted weeks 12-13 as rest" in capsys.readouterr().out
+    assert plan.read_text() == before
+
+
+def test_move_refusal_exit_code(capsys):
+    assert main(["move", str(EXAMPLE), "12", "tue", "wed"]) == 2
+    assert "already has" in capsys.readouterr().err
+
+
+def test_library_command(monkeypatch, capsys):
+    monkeypatch.setenv("INTERVALS_ICU_API_KEY", "k")
+    with respx.mock:
+        respx.get(f"{API}/folders").mock(return_value=httpx.Response(200, json=[]))
+        assert main(["library"]) == 0
+    assert "No workout folders in the library." in capsys.readouterr().out

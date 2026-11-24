@@ -153,6 +153,9 @@ Nothing is on your calendar yet. Tell Claude to apply it and it calls
 | `delete_plan(plan_id, dry_run=true, oldest?, newest?)` | Remove every event the plan created, nothing else | only with `dry_run=false` |
 | `get_fitness(oldest, newest)` | CTL, ATL, Form (TSB = CTL − ATL) and Form as % of CTL, per day | no |
 | `get_activities(oldest, newest)` | Completed activities: time, distance, load, avg/normalized power, IF, HR | no |
+| `move_workout(plan_yaml, week, day, to_day, to_week?, swap=false, dry_run=true)` | Move one session to another day: edits plan.yaml, then syncs with prune | only with `dry_run=false` |
+| `shift_plan(plan_yaml, weeks=1, from_week?, dry_run=true)` | Push the rest of the plan back N weeks (illness, travel); past weeks stay | only with `dry_run=false` |
+| `list_library(folder?)` | Your intervals.icu workout library: folders and plans with their workouts | no |
 
 `plan_yaml` is a path to the file. Relative `workouts_dir` paths are resolved
 from the plan file's folder. `delete_plan` searches one year back and two
@@ -269,6 +272,39 @@ intervals.icu. Ride it outdoors. On a rainy Saturday, the description points
 to `W08_Rainy_Saturday_2h.zwo` for the trainer instead. All targets are % of FTP, so it works for any
 rider once your FTP is set in your training app.
 
+### Moving sessions and shifting the plan
+
+`plan.yaml` is the source of truth, so these tools **change the file** and then
+sync the calendar. Changing only the calendar would be undone by your next
+push. The dry run shows both: the `plan.yaml` diff and the calendar diff.
+
+**`move_workout`** moves one session, e.g. "week 3, Tuesday to Friday". It
+writes the smallest possible override for that week (`tue: null, fri: ...`),
+and moving it back removes the override again. It refuses to:
+
+- move a session that's already in the past, or move one into the past;
+- move onto a day that already has a session (pass `swap=true` to trade places);
+- move from a day that has no session.
+
+Because uids are `w<NN>-<day>`, a move is a delete plus a create on the
+calendar: `+ Fri` and `- Tue` in the diff.
+
+**`shift_plan`** is for "I was sick, push the rest back a week":
+
+- **Nothing ridden yet** (no session before today): `start` moves by N weeks,
+  and every event is moved in place.
+- **Under way:** N empty `rest` weeks are inserted before `from_week` (default:
+  the current week), and an empty `rest: {}` template is added if the plan has
+  none. That week and everything after it move N weeks later. Past sessions stay
+  on the calendar where they happened; pruning never deletes the past. `# Week N`
+  comments on the weeks list are renumbered.
+
+When editing, comments and layout are kept: every line the edit doesn't
+change stays byte for byte as you wrote it. If someone else changes the file
+while the tool runs, nothing is written. The file is written first (git can
+undo it), then the calendar is synced. If the sync fails, the error tells you
+to finish with `push_plan(prune=true)`.
+
 ## Safety design
 
 These rules are the core of the project. Each one is covered by tests.
@@ -301,6 +337,10 @@ These rules are the core of the project. Each one is covered by tests.
    environment variable, or from a `.env` file in the working directory
    (`.env` is git-ignored). It's never logged, printed, or included in error
    messages or object reprs.
+5. **Edits to `plan.yaml` are previewed and careful.** `move_workout` and
+   `shift_plan` show the file diff in the dry run, never touch past sessions,
+   refuse to overwrite a file that changed meanwhile, and write it atomically.
+   `list_library` only reads.
 
 ## Syncing to your training apps
 
@@ -354,6 +394,10 @@ intervals-icu-planner delete winterbase                    # dry run: lists what
 intervals-icu-planner delete winterbase --apply
 intervals-icu-planner fitness 2026-11-01 2026-11-30
 intervals-icu-planner activities 2026-11-01 2026-11-30
+intervals-icu-planner move plan.yaml 3 tue fri             # dry run: plan.yaml + calendar diff
+intervals-icu-planner move plan.yaml 3 tue wed --swap --apply
+intervals-icu-planner shift plan.yaml --weeks 1            # dry run: push the rest back a week
+intervals-icu-planner library [--folder winter]            # list the workout library
 intervals-icu-planner schema                               # print the plan.yaml JSON Schema
 ```
 
@@ -363,10 +407,9 @@ invalid input or missing key.
 
 ## Roadmap
 
-- `move_workout`: move one session to another day
-- `shift_plan`: move a whole plan by N weeks, with a diff
 - Activity analysis: planned vs completed, compliance per week
 - OAuth and the streamable HTTP transport, for claude.ai custom connectors
+- Writing to the workout library (import or remove workouts in one dedicated folder)
 - PyPI release
 
 ## Development
