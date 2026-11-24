@@ -7,6 +7,11 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- `move_workout` / `move`: move one session to another day (or swap two),
+  by editing plan.yaml and syncing with prune. Comments and layout are kept.
+- `shift_plan` / `shift`: push the rest of a plan back N weeks. Past weeks
+  stay; a plan with no sessions ridden yet just moves its start.
+- `list_library` / `library`: read-only list of the workout library.
 - `push_plan(prune=true)` / `push --prune`: also delete the plan's stale
   events (sessions removed from the plan), from today on. Past events are
   never pruned, and deletion runs only after the upsert succeeds.

@@ -121,6 +121,10 @@ class IntervalsClient:
         params = {"oldest": oldest.isoformat(), "newest": newest.isoformat()}
         return self._request("GET", "/wellness", params) or []
 
+    def list_folders(self) -> list[JSON]:
+        """The workout library: folders and plans, each with its workouts in ``children``."""
+        return self._request("GET", "/folders") or []
+
     def list_activities(self, oldest: dt.date, newest: dt.date) -> list[JSON]:
         """Completed activities, newest first. Strava imports come back as stubs."""
         params = {"oldest": oldest.isoformat(), "newest": newest.isoformat()}

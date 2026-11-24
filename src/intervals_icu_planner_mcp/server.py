@@ -19,11 +19,13 @@ from .plan import PlanError
 INSTRUCTIONS = """\
 Plan-level operations on the user's intervals.icu calendar.
 
-Safety rules: push_plan and delete_plan default to dry_run=true and return a
-calendar diff. Show that diff to the user and get their explicit OK before
-calling again with dry_run=false. These tools only ever modify events whose uid
-was created by a plan (planner-<plan_id>-w<NN>-<day>); nothing else on the
-calendar is touched.
+Safety rules: push_plan, delete_plan, move_workout and shift_plan default to
+dry_run=true and return a diff. Show that diff to the user and get their
+explicit OK before calling again with dry_run=false. These tools only ever
+modify events whose uid was created by a plan (planner-<plan_id>-w<NN>-<day>);
+nothing else on the calendar is touched. move_workout and shift_plan also edit
+the plan.yaml file (its diff is in the dry run), because the file is the
+source of truth.
 """
 
 mcp = MCPServer(
@@ -149,6 +151,83 @@ def get_activities(oldest: str, newest: str) -> str:
         newest: Last day, YYYY-MM-DD (inclusive).
     """
     return _run(lambda c: planner.activities(oldest, newest, client=c))
+
+
+WRITES_PLAN = ToolAnnotations(destructive_hint=True, idempotent_hint=False, open_world_hint=True)
+
+
+@mcp.tool(annotations=WRITES_PLAN)
+def move_workout(
+    plan_yaml: str,
+    week: int,
+    day: str,
+    to_day: str,
+    to_week: int | None = None,
+    swap: bool = False,
+    dry_run: bool = True,
+) -> str:
+    """Move one planned session to another day, e.g. week 3 Tuesday -> Wednesday.
+
+    The change is made in plan.yaml (the source of truth, comments kept), then the
+    calendar is synced with prune. With dry_run=true (the default) it shows the
+    plan.yaml diff and the calendar diff and changes nothing. Only call with
+    dry_run=false after the user has seen both and agreed. Refuses to move past
+    sessions, or onto a day that already has one unless swap=true.
+
+    Args:
+        plan_yaml: Path to the plan.yaml file.
+        week: Plan week of the session (1 = first week).
+        day: Day of the session: mon, tue, wed, thu, fri, sat or sun.
+        to_day: Day to move it to.
+        to_week: Week to move it to (default: the same week).
+        swap: If the target day has a session, trade places instead of refusing.
+        dry_run: true = show the diffs only; false = write plan.yaml and the calendar.
+    """
+    return _run(
+        lambda c: planner.move(
+            plan_yaml, week, day, to_day, client=c, to_week=to_week, swap=swap, dry_run=dry_run
+        )
+    )
+
+
+@mcp.tool(annotations=WRITES_PLAN)
+def shift_plan(
+    plan_yaml: str,
+    weeks: int = 1,
+    from_week: int | None = None,
+    dry_run: bool = True,
+) -> str:
+    """Push the rest of a plan back by N weeks (e.g. after illness or travel).
+
+    Past weeks stay where they happened. If the plan is under way, N empty (rest)
+    weeks are inserted before from_week (default: the current week), so it and every
+    later week move N weeks later. If the plan hasn't started, its start date moves.
+    The change is made in plan.yaml, then the calendar is synced with prune; past
+    events are never deleted. With dry_run=true (the default) nothing changes. Only
+    call with dry_run=false after the user has seen the diffs and agreed.
+
+    Args:
+        plan_yaml: Path to the plan.yaml file.
+        weeks: How many weeks to push back (1-12).
+        from_week: First week to move (default: the current week).
+        dry_run: true = show the diffs only; false = write plan.yaml and the calendar.
+    """
+    return _run(
+        lambda c: planner.shift(
+            plan_yaml, client=c, weeks=weeks, from_week=from_week, dry_run=dry_run
+        )
+    )
+
+
+@mcp.tool(annotations=READ_ONLY)
+def list_library(folder: str | None = None) -> str:
+    """List the workout library on intervals.icu: folders and plans with their workouts
+    (name, type, duration, training load). Read-only.
+
+    Args:
+        folder: Optional text; only folders whose name contains it.
+    """
+    return _run(lambda c: planner.library(client=c, folder=folder))
 
 
 def main() -> None:

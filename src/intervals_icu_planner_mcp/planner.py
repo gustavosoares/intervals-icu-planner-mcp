@@ -11,12 +11,19 @@ live here, so every front end gets them:
 from __future__ import annotations
 
 import datetime as dt
+import difflib
+import os
+import shutil
 from collections.abc import Callable
 from typing import Any
 
-from .client import JSON, IntervalsClient
+import yaml
+
+from . import edit
+from .client import JSON, ApiError, IntervalsClient
 from .diff import compute_diff, event_date, event_uid, render_diff
-from .plan import Plan, PlannedEvent, load_plan, owns_uid, valid_plan_id
+from .edit import Edited, EditError
+from .plan import DAYS, Plan, PlannedEvent, build_plan, load_plan, owns_uid, valid_plan_id
 
 DEFAULT_LOOKBACK = dt.timedelta(days=365)
 DEFAULT_LOOKAHEAD = dt.timedelta(days=730)
@@ -149,9 +156,30 @@ def push(
     event shows as new.
     """
     plan = load_plan(plan_path, start=start)  # PlanError before any network call
+    return _sync(
+        plan,
+        client=client,
+        dry_run=dry_run,
+        prune=prune,
+        now=today(),
+        apply_hint=apply_hint,
+        prune_hint=prune_hint,
+    )
+
+
+def _sync(
+    plan: Plan,
+    *,
+    client: IntervalsClient | None,
+    dry_run: bool,
+    prune: bool,
+    now: dt.date,
+    apply_hint: str,
+    prune_hint: str,
+) -> str:
+    """Diff a validated plan against the calendar; upsert (and prune) unless a dry run."""
     if not dry_run:
         _require(client)
-    now = today()
     existing = client.list_events(*search_window(plan, now)) if client else None
     diff = compute_diff(plan, existing)
 
@@ -178,6 +206,161 @@ def push(
     if doomed:  # after the upsert: a failed upsert raises before anything is deleted
         deleted = _delete_owned(client, plan.id, doomed)
     return render(applied=True, deleted=deleted)
+
+
+# ------------------------------------------------------------ move and shift
+
+
+def week_of(plan: Plan, day: dt.date) -> int:
+    """The plan week ``day`` falls in (may be < 1 or > plan.weeks)."""
+    return (day - plan.start).days // 7 + 1
+
+
+def session_date(plan: Plan, week: int, day: str) -> dt.date:
+    return plan.week_start(week) + dt.timedelta(days=DAYS.index(day))
+
+
+def _edit_and_sync(
+    plan_path: str,
+    make_edit: Callable[[str, Plan], Edited],
+    *,
+    client: IntervalsClient | None,
+    dry_run: bool,
+    now: dt.date,
+    apply_hint: str,
+) -> str:
+    """Edit plan.yaml, validate the result, then (unless a dry run) write it and push with prune.
+
+    The dry run shows both the plan.yaml change and the calendar diff. On apply the
+    file is written first (it is the source of truth; git can undo it), then the
+    calendar follows. If the push fails, the error says how to finish it.
+    """
+    with open(plan_path, encoding="utf-8") as f:
+        src = f.read()
+    current = load_plan(plan_path)  # the file must be valid before we change it
+    try:
+        edited = make_edit(src, current)
+    except EditError as e:
+        raise PlannerError(str(e)) from None
+    base_dir = os.path.dirname(os.path.abspath(plan_path))
+    new_plan = build_plan(yaml.safe_load(edited.text), base_dir)  # PlanError if the edit broke it
+
+    changes = "".join(
+        difflib.unified_diff(
+            src.splitlines(keepends=True),
+            edited.text.splitlines(keepends=True),
+            fromfile=os.path.basename(plan_path),
+            tofile=os.path.basename(plan_path),
+            n=0,
+        )
+    )
+    head = ["Plan file change:", *(f"  {s}" for s in edited.summary)]
+    if edited.reformatted:
+        head.append("  note: the file's layout couldn't be kept exactly; check the diff")
+    head += ["", changes.rstrip("\n"), ""]
+
+    if not dry_run:
+        _require(client)
+        with open(plan_path, encoding="utf-8") as f:
+            if f.read() != src:
+                raise PlannerError(f"{plan_path} changed while this ran; nothing was written")
+        _write_atomic(plan_path, edited.text)
+        head.insert(0, f"Wrote {plan_path}.")
+    try:
+        calendar = _sync(
+            new_plan,
+            client=client,
+            dry_run=dry_run,
+            prune=True,
+            now=now,
+            apply_hint=apply_hint,
+            prune_hint="prune=true",
+        )
+    except ApiError as e:
+        if dry_run:
+            raise
+        raise ApiError(
+            f"{e}\n{plan_path} was updated but the calendar wasn't: "
+            "run push_plan with prune=true to finish."
+        ) from None
+    return "\n".join(head) + "\n" + calendar
+
+
+def _write_atomic(path: str, text: str) -> None:
+    tmp = f"{path}.tmp-{os.getpid()}"
+    with open(tmp, "w", encoding="utf-8") as f:
+        f.write(text)
+    shutil.copymode(path, tmp)
+    os.replace(tmp, path)
+
+
+def move(
+    plan_path: str,
+    week: int,
+    day: str,
+    to_day: str,
+    *,
+    client: IntervalsClient | None,
+    to_week: int | None = None,
+    swap: bool = False,
+    dry_run: bool = True,
+    today: Callable[[], dt.date] = dt.date.today,
+    apply_hint: str = "dry_run=false",
+) -> str:
+    """Move one session to another day by editing plan.yaml, then push with prune."""
+    now = today()
+
+    def make_edit(src: str, plan: Plan) -> Edited:
+        edited = edit.move_session(
+            src, week=week, day=day, to_day=to_day, to_week=to_week, swap=swap
+        )
+        d_from = session_date(plan, week, day[:3].lower())
+        d_to = session_date(plan, week if to_week is None else to_week, to_day[:3].lower())
+        for label, d in (("session", d_from), ("target day", d_to)):
+            if d < now:
+                raise EditError(f"the {label} ({d}) is in the past; only future sessions can move")
+        return edited
+
+    return _edit_and_sync(
+        plan_path, make_edit, client=client, dry_run=dry_run, now=now, apply_hint=apply_hint
+    )
+
+
+def shift(
+    plan_path: str,
+    *,
+    client: IntervalsClient | None,
+    weeks: int = 1,
+    from_week: int | None = None,
+    dry_run: bool = True,
+    today: Callable[[], dt.date] = dt.date.today,
+    apply_hint: str = "dry_run=false",
+) -> str:
+    """Push the rest of the plan back by ``weeks``, leaving past weeks where they were.
+
+    Nothing ridden yet (no session before today): the start date moves, and every
+    event is moved in place. Under way: ``weeks`` rest weeks are inserted before
+    ``from_week`` (default: the current week).
+    """
+    if not 1 <= weeks <= 12:
+        raise PlannerError("weeks must be between 1 and 12")
+    now = today()
+
+    def make_edit(src: str, plan: Plan) -> Edited:
+        current = week_of(plan, now)
+        started = any(e.date < now for e in plan.events)
+        if not started and from_week is None:
+            return edit.shift_start(src, weeks=weeks)
+        if current > plan.weeks:
+            raise EditError("the plan has already finished")
+        start_at = max(current, 1) if from_week is None else from_week
+        if start_at < current:
+            raise EditError(f"week {start_at} is in the past (this is week {current})")
+        return edit.shift_remaining(src, weeks=weeks, from_week=start_at)
+
+    return _edit_and_sync(
+        plan_path, make_edit, client=client, dry_run=dry_run, now=now, apply_hint=apply_hint
+    )
 
 
 # ------------------------------------------------------------------- planned
@@ -295,6 +478,45 @@ def fitness(oldest: str, newest: str, *, client: IntervalsClient | None) -> str:
         return f"No wellness data between {lo} and {hi}."
     head = f"Fitness {lo} -> {hi} (CTL = fitness, ATL = fatigue, Form = CTL - ATL):\n\n"
     return head + _table(["date", "CTL", "ATL", "Form", "Form %"], rows, right={1, 2, 3, 4})
+
+
+# ------------------------------------------------------------------- library
+
+
+def library(*, client: IntervalsClient | None, folder: str | None = None) -> str:
+    """The athlete's workout library (read-only): folders and plans with their workouts.
+
+    ``folder`` keeps only folders whose name contains it (case-insensitive).
+    """
+    folders = _require(client).list_folders()
+    if folder:
+        folders = [f for f in folders if folder.lower() in str(f.get("name") or "").lower()]
+    if not folders:
+        scope = f" matching {folder!r}" if folder else ""
+        return f"No workout folders{scope} in the library."
+
+    out: list[str] = []
+    total = 0
+    for f in sorted(folders, key=lambda f: str(f.get("name") or "").lower()):
+        workouts = [w for w in f.get("children") or [] if isinstance(w, dict)]
+        total += len(workouts)
+        kind = "plan" if str(f.get("type") or "").upper() == "PLAN" else "folder"
+        out.append(f"{f.get('name') or '(unnamed)'} ({kind}, {len(workouts)} workouts)")
+        rows = [
+            [
+                _truncate(str(w.get("name") or ""), 44),
+                str(w.get("type") or "-"),
+                _duration(w.get("moving_time")),
+                _num(w.get("icu_training_load")),
+            ]
+            for w in sorted(workouts, key=lambda w: str(w.get("name") or "").lower())
+        ]
+        if rows:
+            table = _table(["workout", "type", "time", "load"], rows, right={2, 3})
+            out.append("\n".join(f"  {line}" for line in table.splitlines()))
+        out.append("")
+    head = f"Workout library: {len(folders)} folder(s), {total} workouts.\n\n"
+    return head + "\n".join(out).rstrip()
 
 
 # ---------------------------------------------------------------- activities

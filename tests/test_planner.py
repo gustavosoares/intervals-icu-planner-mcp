@@ -6,9 +6,10 @@ import httpx
 import pytest
 import respx
 
+from intervals_icu_planner_mcp import edit as edit_mod
 from intervals_icu_planner_mcp import planner
 from intervals_icu_planner_mcp.client import ApiError
-from intervals_icu_planner_mcp.plan import PlanError
+from intervals_icu_planner_mcp.plan import PlanError, load_plan
 from intervals_icu_planner_mcp.planner import PlannerError, event_payload, form_percent
 
 from .conftest import API, cal_event
@@ -454,4 +455,190 @@ def test_no_activities(client):
         respx.get(f"{API}/activities").mock(return_value=httpx.Response(200, json=[]))
         assert planner.activities("2026-12-01", "2026-12-03", client=client) == (
             "No activities between 2026-12-01 and 2026-12-03."
+        )
+
+
+# ------------------------------------------------------------ move and shift
+
+D = dt.date
+
+
+def at(day):
+    return lambda: day
+
+
+def read(path: str) -> str:
+    with open(path, encoding="utf-8") as f:
+        return f.read()
+
+
+def test_move_dry_run_shows_both_diffs_and_writes_nothing(api, client, write_plan, make_plan):
+    path = write_plan()
+    before = read(path)
+    api.events.return_value = httpx.Response(200, json=calendar_for(make_plan()))
+    out = planner.move(path, 1, "tue", "thu", client=client, today=TODAY)
+    assert read(path) == before
+    assert writes(api) == 0
+    assert "moved A.zwo: week 1 tue -> week 1 thu" in out
+    assert "+    thu: A.zwo" in out  # the plan.yaml diff
+    assert "  + 2026-12-03 Thu  WORKOUT  A.zwo" in out
+    assert "  - 2026-12-01  WORKOUT  Workout A  planner-test-w01-tue" in out
+    assert "1 new, 0 updated, 4 unchanged, 1 stale (1 to delete)." in out
+
+
+def test_move_apply_writes_the_file_then_syncs_with_prune(api, client, write_plan, make_plan):
+    path = write_plan()
+    api.events.return_value = httpx.Response(200, json=calendar_for(make_plan()))
+    out = planner.move(path, 1, "tue", "thu", client=client, dry_run=False, today=TODAY)
+    assert out.startswith(f"Wrote {path}.")
+    plan = load_plan(path)
+    assert {(e.week, e.day) for e in plan.events if e.week == 1} == {(1, "thu"), (1, "sat")}
+    sent = json.loads(api.upsert.calls.last.request.content)
+    assert [e["external_id"] for e in sent] == ["planner-test-w01-thu"]
+    body = json.loads(api.bulk_delete.calls.last.request.content)
+    assert body == [{"id": 1}]  # the old Tuesday event, nothing else
+
+
+@pytest.mark.parametrize(
+    "args, today, msg",
+    [
+        ((1, "tue", "thu"), D(2026, 12, 2), r"session \(2026-12-01\) is in the past"),
+        ((1, "sat", "mon"), D(2026, 12, 2), r"target day \(2026-11-30\) is in the past"),
+        ((1, "tue", "sat"), D(2026, 11, 23), "already has note 'Group ride'"),
+        ((1, "wed", "thu"), D(2026, 11, 23), "has no session"),
+    ],
+)
+def test_move_refusals_change_nothing(api, client, write_plan, args, today, msg):
+    path = write_plan()
+    before = read(path)
+    with pytest.raises(PlannerError, match=msg):
+        planner.move(path, *args, client=client, dry_run=False, today=at(today))
+    assert read(path) == before
+    assert len(api.calls) == 0
+
+
+def test_move_apply_needs_a_key_and_leaves_the_file(write_plan):
+    path = write_plan()
+    before = read(path)
+    with pytest.raises(PlannerError, match="API key"):
+        planner.move(path, 1, "tue", "thu", client=None, dry_run=False, today=TODAY)
+    assert read(path) == before
+
+
+def test_move_dry_run_works_offline(write_plan):
+    out = planner.move(write_plan(), 1, "tue", "thu", client=None, today=TODAY)
+    assert "Calendar not checked" in out
+
+
+def test_file_changed_meanwhile_is_not_overwritten(api, client, write_plan, monkeypatch):
+    path = write_plan()
+    real = edit_mod.move_session
+
+    def edit_and_touch(src, **kw):
+        result = real(src, **kw)
+        with open(path, "a") as f:
+            f.write("# someone else\n")
+        return result
+
+    monkeypatch.setattr(edit_mod, "move_session", edit_and_touch)
+    with pytest.raises(PlannerError, match="changed while this ran"):
+        planner.move(path, 1, "tue", "thu", client=client, dry_run=False, today=TODAY)
+    assert read(path).endswith("# someone else\n")
+    assert writes(api) == 0
+
+
+def test_failed_sync_after_write_says_how_to_finish(api, client, write_plan):
+    api.events.return_value = httpx.Response(200, json=[])
+    api.upsert.side_effect = None
+    api.upsert.return_value = httpx.Response(500, text="boom")
+    path = write_plan()
+    with pytest.raises(ApiError, match="was updated but the calendar wasn't"):
+        planner.move(path, 1, "tue", "thu", client=client, dry_run=False, today=TODAY)
+    assert (1, "thu") in {(e.week, e.day) for e in load_plan(path).events}
+
+
+def test_shift_before_the_start_moves_the_start(api, client, write_plan, make_plan):
+    path = write_plan()
+    api.events.return_value = httpx.Response(200, json=calendar_for(make_plan()))
+    out = planner.shift(path, client=client, weeks=1, dry_run=False, today=TODAY)
+    assert "start: 2026-11-30 -> 2026-12-07" in out
+    assert load_plan(path).start == D(2026, 12, 7)
+    assert "0 new, 5 updated, 0 unchanged, 0 stale" in out  # same uids, moved in place
+    assert api.bulk_delete.call_count == 0
+
+
+def test_shift_in_week_one_before_any_session_moves_the_start(api, client, write_plan):
+    """Day 1 of the plan, a rest day: nothing ridden yet, so it's a plain start move."""
+    out = planner.shift(write_plan(), client=client, today=at(D(2026, 11, 30)))
+    assert "start: 2026-11-30 -> 2026-12-07" in out
+    assert "inserted" not in out
+
+
+def test_shift_under_way_keeps_the_past(api, client, write_plan, make_plan):
+    """In week 2 (Dec 8): week 1 stays, week 2 onwards moves a week later."""
+    path = write_plan()
+    api.events.return_value = httpx.Response(200, json=calendar_for(make_plan()))
+    out = planner.shift(path, client=client, weeks=1, dry_run=False, today=at(D(2026, 12, 8)))
+    plan = load_plan(path)
+    assert plan.weeks == 4
+    assert {e.week for e in plan.events} == {1, 3, 4}
+    assert "inserted week 2 as rest" in out
+    body = json.loads(api.bulk_delete.calls.last.request.content)
+    # Weeks are now [build, rest, build, easy]. Stale: old w02-tue (today, Dec 8),
+    # w02-sat and w03-wed (that content is now w03/w04). Week 1, in the past, is untouched.
+    assert sorted(d["id"] for d in body) == [3, 4, 5]
+    sent = {e["external_id"] for e in json.loads(api.upsert.calls.last.request.content)}
+    assert sent == {"planner-test-w03-tue", "planner-test-w03-sat", "planner-test-w04-wed"}
+
+
+@pytest.mark.parametrize(
+    "kw, today, msg",
+    [
+        ({"weeks": 0}, D(2026, 12, 8), "between 1 and 12"),
+        ({"weeks": 13}, D(2026, 12, 8), "between 1 and 12"),
+        ({"from_week": 1}, D(2026, 12, 8), r"week 1 is in the past \(this is week 2\)"),
+        ({}, D(2027, 1, 30), "already finished"),
+    ],
+)
+def test_shift_refusals(client, write_plan, kw, today, msg):
+    with pytest.raises(PlannerError, match=msg):
+        planner.shift(write_plan(), client=client, today=at(today), **kw)
+
+
+# ------------------------------------------------------------------- library
+
+
+FOLDERS = [
+    {
+        "id": 2,
+        "name": "Winter base",
+        "type": "PLAN",
+        "children": [
+            {"name": "Tempo 2x12", "type": "Ride", "moving_time": 3600, "icu_training_load": 62},
+            {"name": "Recovery spin", "type": "Ride", "moving_time": 2700, "icu_training_load": 21},
+        ],
+    },
+    {"id": 1, "name": "Favourites", "type": "FOLDER", "children": []},
+]
+
+
+def test_library_lists_folders_and_workouts(client):
+    with respx.mock:
+        respx.get(f"{API}/folders").mock(return_value=httpx.Response(200, json=FOLDERS))
+        out = planner.library(client=client)
+    lines = out.splitlines()
+    assert lines[0] == "Workout library: 2 folder(s), 2 workouts."
+    assert "Favourites (folder, 0 workouts)" in out
+    assert "Winter base (plan, 2 workouts)" in out
+    assert out.index("Recovery spin") < out.index("Tempo 2x12")  # sorted by name
+    row = next(ln for ln in lines if "Tempo 2x12" in ln).split()
+    assert row[-3:] == ["Ride", "1:00", "62"]
+
+
+def test_library_folder_filter_and_empty(client):
+    with respx.mock:
+        respx.get(f"{API}/folders").mock(return_value=httpx.Response(200, json=FOLDERS))
+        assert "Favourites" not in planner.library(client=client, folder="WINTER")
+        assert planner.library(client=client, folder="summer") == (
+            "No workout folders matching 'summer' in the library."
         )

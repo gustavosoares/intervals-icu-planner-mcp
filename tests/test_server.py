@@ -20,13 +20,35 @@ def call(name, **args):
 
 def test_tools_and_parameters():
     t = tools()
-    assert set(t) == {"push_plan", "get_planned", "delete_plan", "get_fitness", "get_activities"}
+    assert set(t) == {
+        "push_plan",
+        "get_planned",
+        "delete_plan",
+        "get_fitness",
+        "get_activities",
+        "move_workout",
+        "shift_plan",
+        "list_library",
+    }
     props = {n: tool.input_schema["properties"] for n, tool in t.items()}
     assert set(props["push_plan"]) == {"plan_yaml", "start_date", "dry_run", "prune"}
     assert set(props["delete_plan"]) == {"plan_id", "dry_run", "oldest", "newest"}
     assert set(props["get_planned"]) == {"oldest", "newest", "plan_id"}
     assert t["push_plan"].input_schema["required"] == ["plan_yaml"]
     assert t["delete_plan"].input_schema["required"] == ["plan_id"]
+    assert set(props["move_workout"]) == {
+        "plan_yaml",
+        "week",
+        "day",
+        "to_day",
+        "to_week",
+        "swap",
+        "dry_run",
+    }
+    assert t["move_workout"].input_schema["required"] == ["plan_yaml", "week", "day", "to_day"]
+    assert set(props["shift_plan"]) == {"plan_yaml", "weeks", "from_week", "dry_run"}
+    assert props["shift_plan"]["weeks"]["default"] == 1
+    assert set(props["list_library"]) == {"folder"}
 
 
 def test_write_tools_default_to_dry_run():
@@ -34,13 +56,18 @@ def test_write_tools_default_to_dry_run():
     assert t["push_plan"].input_schema["properties"]["dry_run"]["default"] is True
     assert t["delete_plan"].input_schema["properties"]["dry_run"]["default"] is True
     assert t["push_plan"].input_schema["properties"]["prune"]["default"] is False
+    for name in ("move_workout", "shift_plan"):
+        assert t[name].input_schema["properties"]["dry_run"]["default"] is True
+    assert t["move_workout"].input_schema["properties"]["swap"]["default"] is False
 
 
 def test_annotations():
     t = tools()
     assert t["delete_plan"].annotations.destructive_hint is True
     assert t["push_plan"].annotations.destructive_hint is True  # can delete with prune
-    for name in ("get_planned", "get_fitness", "get_activities"):
+    for name in ("move_workout", "shift_plan"):
+        assert t[name].annotations.destructive_hint is True
+    for name in ("get_planned", "get_fitness", "get_activities", "list_library"):
         assert t[name].annotations.read_only_hint is True
 
 
