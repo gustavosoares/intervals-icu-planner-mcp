@@ -16,7 +16,7 @@
     <SteadyState Duration="180" Power="0.680"></SteadyState>
     <SteadyState Duration="60" Power="0.620" Cadence="110"><textevent timeoffset="0" message="Spin-up 4/4: 110+rpm, smooth, no bouncing"/></SteadyState>
     <SteadyState Duration="180" Power="0.680"></SteadyState>
-    <SteadyState Duration="1080" Power="0.700"><textevent timeoffset="0" message="Steady Z2 @ 70% FTP"/><textevent timeoffset="540" message="Stay relaxed: shoulders down, grip loose"/></SteadyState>
+    <SteadyState Duration="840" Power="0.700"><textevent timeoffset="0" message="Steady Z2 @ 70% FTP"/><textevent timeoffset="540" message="Stay relaxed: shoulders down, grip loose"/></SteadyState>
     <Cooldown Duration="300" PowerLow="0.60" PowerHigh="0.42"><textevent timeoffset="0" message="Cool down. Nice work - spin it out"/></Cooldown>
   </workout>
 </workout_file>

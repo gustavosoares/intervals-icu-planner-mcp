@@ -2,7 +2,7 @@
 <workout_file>
   <author>intervals-icu-planner-mcp example</author>
   <name>Tempo 3x10min</name>
-  <description>Winter tempo: 3 x 10min @ 80% FTP inside a 75min ride.</description>
+  <description>Winter tempo: 3 x 10min @ 80% FTP inside an 80min ride.</description>
   <sportType>bike</sportType>
   <tags><tag name="Tempo"/></tags>
   <workout>

@@ -1,49 +1,70 @@
 # yaml-language-server: $schema=../../schemas/plan.schema.json
 #
-# 12-week winter base plan: threshold progression, tempo blocks, a weekly
-# outdoor ride, and a recovery week every 4th week.
-# All power targets in the .zwo files are % of FTP, so set your FTP in the
-# app you ride with (Zwift, MyWhoosh, Garmin, ...).
+# Winter base plan: 12 weeks of mostly Z1-Z2 and light tempo, with no threshold work.
+# Three 4-week cycles: two short weeks (weekday rides of 60 min or less),
+# one longer week, then a sweet spot week. Each sweet spot session builds on the last.
+# Weekend: an outdoor group ride on Saturday and a recovery spin on Sunday.
+# Monday and Friday are left out: rest or strength training, nothing scheduled.
+# Power targets live in the .zwo files as % of FTP.
 
-id: winterbase            # every uid: planner-winterbase-w01-tue, ...
-name: Winter Base 12wk
-start: 2026-11-30         # Monday of week 1 (override with start_date / --start)
-workouts_dir: workouts    # relative to this file
+id: winterbase
+name: Winter Base 12 Weeks
+start: 2026-11-23
+workouts_dir: workouts
 type: Ride
 
 templates:
-  # A build week. Tuesday's key session changes every week (see `weeks`).
-  build:
-    tue: T1_Threshold_3x8.zwo
-    wed: W02_Z2_Endurance_60_Cadence.zwo
-    thu: W04_Z2_60_Neuromuscular_Sprints.zwo
+  short:
+    tue:
+      workout: W09_Tempo_60_2x12.zwo
+      description: Light tempo, 2x12 min at 80% FTP. Comfortably hard, 5-6/10.
+    wed:
+      workout: W10_Z2_45.zwo
+      description: Easy Z2. Swap for W02_Z2_Endurance_60_Cadence.zwo if you have the time.
+    thu:
+      workout: W04_Z2_60_Neuromuscular_Sprints.zwo
+      description: Z2 with optional 6x10s sprints. Turn ERG off for the sprints.
     sat:
       note: Outdoor group ride
-      description: >-
-        Long outdoor ride, mostly Z2. Bad weather? Ride W08_Rainy_Saturday_2h
-        indoors instead.
+      description: Long ride of the week, mostly Z2 with some tempo. If the weather is bad, ride W08_Rainy_Saturday_2h.zwo indoors.
     sun: W01_Recovery_Spin_45.zwo
 
-  # Drop the intensity, keep some easy volume.
-  recovery:
-    tue: W02_Z2_Endurance_60_Cadence.zwo
-    thu: W01_Recovery_Spin_45.zwo
+  long:
+    tue:
+      workout: W06_Tempo_3x10.zwo
+      description: Light tempo, 3x10 min at 80% FTP.
+    wed: W02_Z2_Endurance_60_Cadence.zwo
+    thu:
+      workout: W11_Z2_75_Sprints.zwo
+      description: Longer Z2 with optional 6x10s sprints. Turn ERG off for the sprints.
     sat:
-      note: Recovery week - easy ride or skip
-      description: Keep it conversational. Skipping is fine.
+      note: Outdoor group ride
+      description: Long ride of the week, mostly Z2 with some tempo. If the weather is bad, ride W08_Rainy_Saturday_2h.zwo indoors.
+    sun: W01_Recovery_Spin_45.zwo
 
-# Week 1 first. `overrides` are merged over the template, day by day;
-# `day: null` removes a session.
+  sweetspot:
+    tue:
+      workout: S1_SweetSpot_2x15.zwo
+      description: Sweet spot at 88-90% FTP. Strong but sustainable, 6-7/10.
+    wed: W02_Z2_Endurance_60_Cadence.zwo
+    thu:
+      workout: W09_Tempo_60_2x12.zwo
+      description: Light tempo, 2x12 min at 80% FTP.
+    sat:
+      note: Outdoor group ride
+      description: Long ride of the week, mostly Z2 with some tempo. If the weather is bad, ride W08_Rainy_Saturday_2h.zwo indoors.
+    sun: W01_Recovery_Spin_45.zwo
+
 weeks:
-  - { template: build, overrides: { tue: T1_Threshold_3x8.zwo } }                                # 1
-  - { template: build, overrides: { tue: W06_Tempo_3x10.zwo, thu: W05_Low_Cadence_Force_5x5.zwo } } # 2
-  - { template: build, overrides: { tue: T2_Threshold_3x10.zwo } }                               # 3
-  - { template: recovery, recovery: true }                                                       # 4
-  - { template: build, overrides: { tue: T3_Threshold_2x15.zwo } }                               # 5
-  - { template: build, overrides: { tue: W07_Tempo_2x20.zwo, thu: W05_Low_Cadence_Force_5x5.zwo } } # 6
-  - { template: build, overrides: { tue: T4_Threshold_3x12.zwo } }                               # 7
-  - { template: recovery, recovery: true }                                                       # 8
-  - { template: build, overrides: { tue: T5_Threshold_2x20.zwo } }                               # 9
-  - { template: build, overrides: { tue: W07_Tempo_2x20.zwo, thu: W05_Low_Cadence_Force_5x5.zwo } } # 10
-  - { template: build, overrides: { tue: T6_Threshold_2x20_Progressed.zwo } }                    # 11
-  - { template: recovery, recovery: true }                                                       # 12
+  - {template: short}                                   # Week 1
+  - {template: short}                                   # Week 2
+  - {template: long}                                    # Week 3
+  - {template: sweetspot}                               # Week 4
+  - {template: short}                                   # Week 5
+  - {template: short}                                   # Week 6
+  - {template: long}                                    # Week 7
+  - {template: sweetspot, overrides: {tue: {workout: S2_SweetSpot_2x20.zwo, description: "Sweet spot at 89% FTP, 2x20 min. Strong but sustainable, 6-7/10."}}}  # Week 8
+  - {template: short}                                   # Week 9
+  - {template: short}                                   # Week 10
+  - {template: long}                                    # Week 11
+  - {template: sweetspot, overrides: {tue: {workout: S3_SweetSpot_3x15.zwo, description: "Sweet spot at 90% FTP, 3x15 min. Strong but sustainable, 6-7/10."}}}  # Week 12

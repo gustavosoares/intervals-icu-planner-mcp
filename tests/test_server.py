@@ -46,7 +46,7 @@ def test_annotations():
 def test_push_plan_offline_dry_run():
     res = call("push_plan", plan_yaml=str(EXAMPLE))
     text = res.content[0].text
-    assert "54 new, 0 updated, 0 unchanged, 0 stale." in text
+    assert "60 new, 0 updated, 0 unchanged, 0 stale." in text
     assert not res.is_error
 
 

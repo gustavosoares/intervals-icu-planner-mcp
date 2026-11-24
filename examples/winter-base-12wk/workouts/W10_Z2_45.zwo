@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workout_file>
+  <author>intervals-icu-planner-mcp example</author>
+  <name>Z2 Endurance 45min</name>
+  <description>Short aerobic ride at 68% FTP.</description>
+  <sportType>bike</sportType>
+  <tags><tag name="Endurance"/></tags>
+  <workout>
+    <Warmup Duration="480" PowerLow="0.45" PowerHigh="0.68"><textevent timeoffset="0" message="Easy ramp-up. Settle in, 85-90rpm"/><textevent timeoffset="420" message="Almost done with warmup"/></Warmup>
+    <SteadyState Duration="1920" Power="0.680"><textevent timeoffset="0" message="Z2 @ 68% FTP. Easy, conversational"/><textevent timeoffset="960" message="Halfway. Relax the shoulders"/></SteadyState>
+    <Cooldown Duration="300" PowerLow="0.60" PowerHigh="0.42"><textevent timeoffset="0" message="Cool down. Nice work - spin it out"/></Cooldown>
+  </workout>
+</workout_file>

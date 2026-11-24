@@ -116,7 +116,7 @@ def test_missing_file(tmp_path):
 
 def test_every_example_workout_is_valid():
     files = glob.glob(os.path.join(EXAMPLE.parent, "workouts", "*.zwo"))
-    assert len(files) == 14
+    assert len(files) == 13
     for path in files:
         w = parse_zwo(path)
         assert 0 < w.total_seconds < MAX_TOTAL_SECONDS

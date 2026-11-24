@@ -127,16 +127,16 @@ Clone the repo (or write your own plan), then ask Claude:
 Claude calls `push_plan` with `dry_run=true` and shows you the diff:
 
 ```
-Winter Base 12wk (winterbase): 12 weeks, 2026-11-30 -> 2027-02-21
+Winter Base 12 Weeks (winterbase): 12 weeks, 2026-11-30 -> 2027-02-21
 
 Week 1, 2026-11-30
-  + 2026-12-01 Tue  WORKOUT  T1_Threshold_3x8.zwo
-  + 2026-12-02 Wed  WORKOUT  W02_Z2_Endurance_60_Cadence.zwo
+  + 2026-12-01 Tue  WORKOUT  W09_Tempo_60_2x12.zwo
+  + 2026-12-02 Wed  WORKOUT  W10_Z2_45.zwo
   + 2026-12-03 Thu  WORKOUT  W04_Z2_60_Neuromuscular_Sprints.zwo
   + 2026-12-05 Sat  NOTE     Outdoor group ride
   + 2026-12-06 Sun  WORKOUT  W01_Recovery_Spin_45.zwo
 ...
-54 new, 0 updated, 0 unchanged, 0 stale.
+60 new, 0 updated, 0 unchanged, 0 stale.
 Dry run: nothing was written. Run again with dry_run=false to apply.
 ```
 
@@ -176,7 +176,7 @@ type: Ride                 # intervals.icu activity type for workouts (default: 
 
 templates:                 # required; named weeks: mon, tue, wed, thu, fri, sat, sun
   build:
-    tue: T1_Threshold_3x8.zwo              # a .zwo file name -> WORKOUT event
+    tue: S1_SweetSpot_2x15.zwo             # a .zwo file name -> WORKOUT event
     thu:
       workout: W04_Z2_60_Neuromuscular_Sprints.zwo
       name: Sprints                        # optional: overrides the <name> in the .zwo
@@ -224,9 +224,12 @@ change `name:`) to force an update.
 ### Example
 
 [`examples/winter-base-12wk/`](examples/winter-base-12wk/) is a 12-week winter
-base plan: a threshold session that progresses from 3×8 to 2×20 minutes, tempo
-and low-cadence force work, a Saturday outdoor ride, and a recovery week every
-fourth week. That's 54 events. All targets are % of FTP, so it works for any
+base plan with no threshold work: mostly Z1–Z2 and light tempo, in three
+4-week cycles of two short weeks (weekday rides of 60 minutes or less), one
+longer week, and a sweet spot week. The sweet spot session builds each cycle:
+2×15, then 2×20, then 3×15 minutes. Saturday is an outdoor group ride (a note,
+with an indoor alternative) and Sunday a recovery spin. Monday and Friday are
+rest days. That's 60 events. All targets are % of FTP, so it works for any
 rider once your FTP is set in your training app.
 
 ## Safety design

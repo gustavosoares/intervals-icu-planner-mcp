@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workout_file>
+  <author>intervals-icu-planner-mcp example</author>
+  <name>Sweet Spot 3x15min</name>
+  <description>Winter sweet spot: 3 x 15min @ 90% FTP, 4min recoveries.</description>
+  <sportType>bike</sportType>
+  <tags><tag name="SweetSpot"/></tags>
+  <workout>
+    <Warmup Duration="600" PowerLow="0.45" PowerHigh="0.68"><textevent timeoffset="0" message="Easy ramp-up. Settle in, 85-90rpm"/><textevent timeoffset="540" message="Almost done with warmup"/></Warmup>
+    <SteadyState Duration="60" Power="0.850"><textevent timeoffset="0" message="Primer: 1min @ 85% FTP"/></SteadyState>
+    <SteadyState Duration="180" Power="0.600"><textevent timeoffset="0" message="Easy before main set"/></SteadyState>
+    <SteadyState Duration="900" Power="0.900"><textevent timeoffset="0" message="Sweet spot 1/3: 15min @ 90% FTP. Strong but sustainable, 6-7/10"/><textevent timeoffset="450" message="Halfway. Steady breathing, 88-92rpm"/></SteadyState>
+    <SteadyState Duration="240" Power="0.550"><textevent timeoffset="0" message="Recover 4min"/></SteadyState>
+    <SteadyState Duration="900" Power="0.900"><textevent timeoffset="0" message="Sweet spot 2/3: 15min @ 90% FTP. Strong but sustainable, 6-7/10"/><textevent timeoffset="450" message="Halfway. Steady breathing, 88-92rpm"/></SteadyState>
+    <SteadyState Duration="240" Power="0.550"><textevent timeoffset="0" message="Recover 4min"/></SteadyState>
+    <SteadyState Duration="900" Power="0.900"><textevent timeoffset="0" message="Sweet spot 3/3: 15min @ 90% FTP. Strong but sustainable, 6-7/10"/><textevent timeoffset="450" message="Halfway. Steady breathing, 88-92rpm"/></SteadyState>
+    <Cooldown Duration="300" PowerLow="0.60" PowerHigh="0.42"><textevent timeoffset="0" message="Cool down. Nice work - spin it out"/></Cooldown>
+  </workout>
+</workout_file>

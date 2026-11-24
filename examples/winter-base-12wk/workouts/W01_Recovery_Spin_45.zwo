@@ -2,7 +2,7 @@
 <workout_file>
   <author>intervals-icu-planner-mcp example</author>
   <name>Recovery Spin 45min</name>
-  <description>Active recovery. Stay under 55% FTP, heart rate in Zone 1. High cadence, zero strain.</description>
+  <description>Active recovery. Stay under 55% FTP. High cadence, zero strain.</description>
   <sportType>bike</sportType>
   <tags><tag name="Recovery"/></tags>
   <workout>

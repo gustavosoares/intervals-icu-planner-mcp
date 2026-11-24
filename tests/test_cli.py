@@ -13,7 +13,7 @@ def test_push_without_apply_is_a_dry_run(capsys):
     assert main(["push", str(EXAMPLE)]) == 0
     out = capsys.readouterr().out
     assert "Dry run: nothing was written. Run again with --apply to apply." in out
-    assert "54 new" in out
+    assert "60 new" in out
 
 
 def test_push_with_key_dry_run_reads_but_never_writes(monkeypatch, capsys):
