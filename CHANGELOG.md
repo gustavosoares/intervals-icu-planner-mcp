@@ -4,6 +4,23 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- `push_plan(prune=true)` / `push --prune`: also delete the plan's stale
+  events (sessions removed from the plan), from today on. Past events are
+  never pruned, and deletion runs only after the upsert succeeds.
+
+### Changed
+- Pushes look for the plan's existing events one year back and two years
+  ahead (or the plan's own range, if wider), so leftovers of a shorter or
+  shifted plan are found, and moved events show as updated, not new.
+- `push_plan` is now annotated as destructive, since it can delete with `prune`.
+- The example plan's Saturday group ride is now a placeholder workout
+  (`W12_Group_Ride_2h30_Placeholder.zwo`) instead of a note, so planned weekly
+  load is realistic.
+- `*.zip` is git-ignored, so exported workout archives aren't committed by mistake.
+
 ## [0.1.0] - Unreleased
 
 ### Added

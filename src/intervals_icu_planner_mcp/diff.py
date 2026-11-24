@@ -7,6 +7,7 @@ it can never be updated or reported as stale.
 
 from __future__ import annotations
 
+import datetime as dt
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import Any, Literal
@@ -52,6 +53,10 @@ class Diff:
     @property
     def to_send(self) -> list[PlannedEvent]:
         return [c.event for c in self.changes if c.status != "unchanged"]
+
+    def prunable(self, today: dt.date) -> list[dict[str, Any]]:
+        """Stale events that pruning may delete: today or later. Past ones are kept."""
+        return [e for e in self.stale if event_date(e) >= today.isoformat()]
 
 
 def _mmss(seconds: int) -> str:
@@ -112,7 +117,16 @@ def compute_diff(plan: Plan, existing: Iterable[dict[str, Any]] | None) -> Diff:
     return Diff(plan, changes, stale)
 
 
-def render_diff(diff: Diff, *, applied: bool = False, apply_hint: str = "dry_run=false") -> str:
+def render_diff(
+    diff: Diff,
+    *,
+    applied: bool = False,
+    apply_hint: str = "dry_run=false",
+    prune: bool = False,
+    prune_hint: str = "prune=true",
+    today: dt.date | None = None,
+    deleted: int = 0,
+) -> str:
     plan = diff.plan
     lines = [f"{plan.name} ({plan.id}): {plan.weeks} weeks, {plan.start} -> {plan.end}"]
     if diff.offline:
@@ -134,25 +148,34 @@ def render_diff(diff: Diff, *, applied: bool = False, apply_hint: str = "dry_run
             line += f"  [{'; '.join(c.fields)}]"
         lines.append(line)
 
+    prunable = diff.prunable(today or dt.date.today()) if prune else []
+    doomed = {event_uid(e) for e in prunable}  # stale uids are unique
     if diff.stale:
-        lines += [
-            "",
-            "Stale: on the calendar with this plan's uid but no longer in the plan.",
-            "Pushing does not remove them; delete_plan does.",
-        ]
+        lines += ["", "Stale: on the calendar with this plan's uid but no longer in the plan."]
+        if prune:
+            lines.append("Pruning deletes the ones from today on (-); earlier ones are kept (!).")
+        else:
+            lines.append(f"Pushing keeps them; push with {prune_hint} to delete them.")
         for e in diff.stale:
+            mark, note = (
+                ("-", "") if event_uid(e) in doomed else ("!", "  (past, kept)" if prune else "")
+            )
             lines.append(
-                f"  ! {event_date(e)}  {e.get('category', '?'):<7}  {e.get('name')}  {event_uid(e)}"
+                f"  {mark} {event_date(e)}  {e.get('category', '?'):<7}  {e.get('name')}  "
+                f"{event_uid(e)}{note}"
             )
 
     n_new, n_upd, n_same = diff.count("new"), diff.count("updated"), diff.count("unchanged")
-    lines += [
-        "",
-        f"{n_new} new, {n_upd} updated, {n_same} unchanged, {len(diff.stale)} stale.",
-    ]
+    stale = f"{len(diff.stale)} stale"
+    if prune and diff.stale:
+        stale += f" ({len(prunable)} to delete)"
+    lines += ["", f"{n_new} new, {n_upd} updated, {n_same} unchanged, {stale}."]
     if applied:
         sent = n_new + n_upd
-        lines.append(f"Applied: sent {sent} event{'s' if sent != 1 else ''} to intervals.icu.")
+        msg = f"Applied: sent {sent} event{'s' if sent != 1 else ''} to intervals.icu"
+        if prune:
+            msg += f", deleted {deleted} stale event{'s' if deleted != 1 else ''}"
+        lines.append(msg + ".")
     else:
         lines.append(f"Dry run: nothing was written. Run again with {apply_hint} to apply.")
     return "\n".join(lines)

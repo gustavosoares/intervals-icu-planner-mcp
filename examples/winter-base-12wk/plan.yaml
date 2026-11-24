@@ -3,7 +3,8 @@
 # Winter base plan: 12 weeks of mostly Z1-Z2 and light tempo, with no threshold work.
 # Three 4-week cycles: two short weeks (weekday rides of 60 min or less),
 # one longer week, then a sweet spot week. Each sweet spot session builds on the last.
-# Weekend: an outdoor group ride on Saturday and a recovery spin on Sunday.
+# Weekend: an outdoor group ride on Saturday (planned as a placeholder workout so the
+# week shows its expected load) and a recovery spin on Sunday.
 # Monday and Friday are left out: rest or strength training, nothing scheduled.
 # Power targets live in the .zwo files as % of FTP.
 
@@ -25,8 +26,9 @@ templates:
       workout: W04_Z2_60_Neuromuscular_Sprints.zwo
       description: Z2 with optional 6x10s sprints. Turn ERG off for the sprints.
     sat:
-      note: Outdoor group ride
-      description: Long ride of the week, mostly Z2 with some tempo. If the weather is bad, ride W08_Rainy_Saturday_2h.zwo indoors.
+      workout: W12_Group_Ride_2h30_Placeholder.zwo
+      name: Outdoor group ride (2-3h Z2-Z3)
+      description: Ride it outdoors. This entry only gives the week a realistic planned load (about 110). If the weather is bad, ride W08_Rainy_Saturday_2h.zwo indoors.
     sun: W01_Recovery_Spin_45.zwo
 
   long:
@@ -38,8 +40,9 @@ templates:
       workout: W11_Z2_75_Sprints.zwo
       description: Longer Z2 with optional 6x10s sprints. Turn ERG off for the sprints.
     sat:
-      note: Outdoor group ride
-      description: Long ride of the week, mostly Z2 with some tempo. If the weather is bad, ride W08_Rainy_Saturday_2h.zwo indoors.
+      workout: W12_Group_Ride_2h30_Placeholder.zwo
+      name: Outdoor group ride (2-3h Z2-Z3)
+      description: Ride it outdoors. This entry only gives the week a realistic planned load (about 110). If the weather is bad, ride W08_Rainy_Saturday_2h.zwo indoors.
     sun: W01_Recovery_Spin_45.zwo
 
   sweetspot:
@@ -51,8 +54,9 @@ templates:
       workout: W09_Tempo_60_2x12.zwo
       description: Light tempo, 2x12 min at 80% FTP.
     sat:
-      note: Outdoor group ride
-      description: Long ride of the week, mostly Z2 with some tempo. If the weather is bad, ride W08_Rainy_Saturday_2h.zwo indoors.
+      workout: W12_Group_Ride_2h30_Placeholder.zwo
+      name: Outdoor group ride (2-3h Z2-Z3)
+      description: Ride it outdoors. This entry only gives the week a realistic planned load (about 110). If the weather is bad, ride W08_Rainy_Saturday_2h.zwo indoors.
     sun: W01_Recovery_Spin_45.zwo
 
 weeks:

@@ -221,3 +221,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Archives (e.g. workout exports dropped into the repo by mistake)
+*.zip

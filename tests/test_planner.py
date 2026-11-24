@@ -7,6 +7,7 @@ import pytest
 import respx
 
 from intervals_icu_planner_mcp import planner
+from intervals_icu_planner_mcp.client import ApiError
 from intervals_icu_planner_mcp.plan import PlanError
 from intervals_icu_planner_mcp.planner import PlannerError, event_payload, form_percent
 
@@ -43,6 +44,9 @@ def api():
         )
 
 
+TODAY = lambda: dt.date(2026, 11, 23)  # noqa: E731
+
+
 def writes(api: Api) -> int:
     return api.upsert.call_count + api.bulk_delete.call_count
 
@@ -51,11 +55,12 @@ def writes(api: Api) -> int:
 
 
 def test_push_dry_run_never_writes(api, client, write_plan):
-    out = planner.push(write_plan(), client=client)
+    out = planner.push(write_plan(), client=client, today=TODAY)
     assert writes(api) == 0
     assert api.events.call_count == 1
     params = dict(api.events.calls.last.request.url.params)
-    assert params == {"oldest": "2026-11-30", "newest": "2026-12-20"}
+    # a wide window, not just the plan's dates, so leftovers of older versions are found
+    assert params == {"oldest": "2025-11-23", "newest": "2028-11-22"}
     assert "5 new, 0 updated, 0 unchanged, 0 stale." in out
     assert "Dry run: nothing was written" in out
 
@@ -164,6 +169,109 @@ def test_note_payload(make_plan):
     }
 
 
+# --------------------------------------------------------------------- prune
+
+
+def calendar_for(plan, extra=()):
+    """The calendar as a previous push of ``plan`` left it, plus ``extra`` events."""
+    cal = [
+        cal_event(
+            e.uid,
+            e.date.isoformat(),
+            id=i,
+            name=e.name,
+            category=e.category,
+            moving_time=e.workout.total_seconds if e.workout else None,
+            description=e.description,
+        )
+        for i, e in enumerate(plan.events, start=1)
+    ]
+    return [*cal, *extra]
+
+
+STALE_FUTURE = cal_event("planner-test-w04-tue", "2026-12-22", id=90, name="Dropped week")
+STALE_PAST = cal_event("planner-test-w05-tue", "2026-11-10", id=91, name="Done already")
+FOREIGN = [
+    cal_event("planner-test-base-w01-tue", "2026-12-01", id=92, name="Other plan"),
+    {
+        "id": 93,
+        "uid": "0b9e-server-uuid",
+        "start_date_local": "2026-12-02T00:00:00",
+        "name": "My race",
+        "category": "RACE_A",
+    },
+]
+
+
+@pytest.fixture
+def stale_calendar(api, make_plan):
+    api.events.return_value = httpx.Response(
+        200, json=calendar_for(make_plan(), [STALE_FUTURE, STALE_PAST, *FOREIGN])
+    )
+
+
+def test_prune_dry_run_shows_what_would_go_and_never_writes(
+    api, client, write_plan, stale_calendar
+):
+    out = planner.push(write_plan(), client=client, prune=True, today=TODAY)
+    assert writes(api) == 0
+    assert "  - 2026-12-22  WORKOUT  Dropped week  planner-test-w04-tue" in out
+    assert "  ! 2026-11-10  WORKOUT  Done already  planner-test-w05-tue  (past, kept)" in out
+    assert "0 new, 0 updated, 5 unchanged, 2 stale (1 to delete)." in out
+    for foreign in ("Other plan", "My race"):
+        assert foreign not in out
+
+
+def test_push_without_prune_never_deletes(api, client, write_plan, stale_calendar):
+    out = planner.push(write_plan(), client=client, dry_run=False, today=TODAY)
+    assert api.bulk_delete.call_count == 0
+    assert "push with prune=true to delete them" in out
+
+
+def test_prune_apply_deletes_only_future_stale_events(api, client, write_plan, stale_calendar):
+    out = planner.push(write_plan(), client=client, dry_run=False, prune=True, today=TODAY)
+    body = json.loads(api.bulk_delete.calls.last.request.content)
+    assert body == [{"id": 90}]  # not the past one, not the other plan, not the race
+    assert "deleted 1 stale event." in out
+
+
+def test_prune_upserts_before_deleting(api, client, write_plan, make_plan):
+    cal = calendar_for(make_plan(), [STALE_FUTURE])
+    cal[0]["name"] = "Old name"  # so there is something to upsert
+    api.events.return_value = httpx.Response(200, json=cal)
+    planner.push(write_plan(), client=client, dry_run=False, prune=True, today=TODAY)
+    assert [c.request.method for c in api.calls] == ["GET", "POST", "PUT"]
+
+
+def test_failed_upsert_deletes_nothing(api, client, write_plan):
+    api.events.return_value = httpx.Response(200, json=[STALE_FUTURE])
+    api.upsert.side_effect = None
+    api.upsert.return_value = httpx.Response(500, text="boom")
+    with pytest.raises(ApiError):
+        planner.push(write_plan(), client=client, dry_run=False, prune=True, today=TODAY)
+    assert api.bulk_delete.call_count == 0
+
+
+def test_prune_with_nothing_stale_sends_no_delete(api, client, write_plan, make_plan):
+    api.events.return_value = httpx.Response(200, json=calendar_for(make_plan()))
+    out = planner.push(write_plan(), client=client, dry_run=False, prune=True, today=TODAY)
+    assert writes(api) == 0
+    assert "deleted 0 stale events." in out
+
+
+def test_shifted_plan_finds_events_outside_its_new_dates(api, client, write_plan, make_plan):
+    """Moving the start shows the old events as moved, not as new."""
+    api.events.return_value = httpx.Response(200, json=calendar_for(make_plan()))
+    out = planner.push(write_plan(), client=client, start="2027-06-07", today=TODAY)
+    assert "0 new, 5 updated, 0 unchanged, 0 stale." in out
+    assert "[date 2026-12-01 -> 2027-06-08]" in out
+
+
+def test_search_window_covers_a_far_future_plan(make_plan):
+    plan = make_plan(start="2029-01-01")
+    assert planner.search_window(plan, TODAY()) == (dt.date(2025, 11, 23), plan.end)
+
+
 # -------------------------------------------------------------------- delete
 
 CALENDAR = [
@@ -176,7 +284,6 @@ CALENDAR = [
     {"id": 7, "external_id": "planner-winter-w03-wed", "start_date_local": "2026-12-16T00:00:00"},
     {"uid": "planner-winter-w04-wed", "start_date_local": "2026-12-23T00:00:00"},  # no id
 ]
-TODAY = lambda: dt.date(2026, 11, 23)  # noqa: E731
 
 
 def test_delete_dry_run_lists_and_never_writes(api, client):

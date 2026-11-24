@@ -1,6 +1,6 @@
 """Command line front end, for people who don't use MCP. Same core as the server.
 
-intervals-icu-planner push plan.yaml [--start YYYY-MM-DD] [--apply]
+intervals-icu-planner push plan.yaml [--start YYYY-MM-DD] [--prune] [--apply]
 intervals-icu-planner delete PLAN_ID [--oldest D] [--newest D] [--apply]
 intervals-icu-planner planned OLDEST NEWEST [--plan-id ID]
 intervals-icu-planner fitness OLDEST NEWEST
@@ -35,6 +35,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("plan", help="path to plan.yaml")
     p.add_argument("--start", help="Monday of week 1, YYYY-MM-DD (overrides the plan's start)")
     p.add_argument("--apply", action="store_true", help="write to the calendar")
+    p.add_argument(
+        "--prune",
+        action="store_true",
+        help="also delete this plan's stale events (from today on; past ones are kept)",
+    )
 
     d = sub.add_parser("delete", help="remove a plan's events (dry run unless --apply)")
     d.add_argument("plan_id", help="the plan's id")
@@ -74,7 +79,9 @@ def main(argv: list[str] | None = None) -> int:
                 client=client,
                 start=args.start,
                 dry_run=not args.apply,
+                prune=args.prune,
                 apply_hint="--apply",
+                prune_hint="--prune",
             )
         elif args.command == "delete":
             out = planner.delete(

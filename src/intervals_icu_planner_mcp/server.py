@@ -56,9 +56,14 @@ READ_ONLY = ToolAnnotations(read_only_hint=True, open_world_hint=True)
 
 
 @mcp.tool(
-    annotations=ToolAnnotations(destructive_hint=False, idempotent_hint=True, open_world_hint=True)
+    annotations=ToolAnnotations(destructive_hint=True, idempotent_hint=True, open_world_hint=True)
 )
-def push_plan(plan_yaml: str, start_date: str | None = None, dry_run: bool = True) -> str:
+def push_plan(
+    plan_yaml: str,
+    start_date: str | None = None,
+    dry_run: bool = True,
+    prune: bool = False,
+) -> str:
     """Push a whole training plan (plan.yaml + .zwo workouts) to the intervals.icu calendar.
 
     Validates the plan and every workout first, then compares it with the calendar and
@@ -67,12 +72,19 @@ def push_plan(plan_yaml: str, start_date: str | None = None, dry_run: bool = Tru
     seen the diff and agreed. Re-pushing is safe: events are matched by uid and updated
     in place.
 
+    Stale events (this plan's events that the plan no longer produces) are kept
+    unless prune=true, which deletes the ones dated today or later. Past events are
+    never pruned, and nothing outside the plan is ever touched.
+
     Args:
         plan_yaml: Path to the plan.yaml file.
         start_date: Optional YYYY-MM-DD Monday for week 1, overriding the plan's start.
         dry_run: true = show the diff only; false = write new and updated events.
+        prune: true = also delete stale events from today on (shown as - in the diff).
     """
-    return _run(lambda c: planner.push(plan_yaml, client=c, start=start_date, dry_run=dry_run))
+    return _run(
+        lambda c: planner.push(plan_yaml, client=c, start=start_date, dry_run=dry_run, prune=prune)
+    )
 
 
 @mcp.tool(annotations=READ_ONLY)

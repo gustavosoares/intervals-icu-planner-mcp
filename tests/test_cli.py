@@ -63,3 +63,21 @@ def test_delete_defaults_to_dry_run(monkeypatch, capsys):
 def test_schema_command(capsys):
     assert main(["schema"]) == 0
     assert json.loads(capsys.readouterr().out) == plan_json_schema()
+
+
+def test_push_prune_without_apply_is_still_a_dry_run(monkeypatch, capsys):
+    monkeypatch.setenv("INTERVALS_ICU_API_KEY", "k")
+    stale = {
+        "id": 9,
+        "external_id": "planner-winterbase-w13-tue",
+        "start_date_local": "2099-01-06T00:00:00",  # always in the future
+        "name": "Old",
+        "category": "WORKOUT",
+    }
+    with respx.mock:  # only GET is mocked: a write would fail the test
+        respx.get(f"{API}/events").mock(return_value=httpx.Response(200, json=[stale]))
+        assert main(["push", str(EXAMPLE), "--prune"]) == 0
+    out = capsys.readouterr().out
+    assert "  - 2099-01-06" in out
+    assert "(1 to delete)" in out
+    assert "Run again with --apply" in out

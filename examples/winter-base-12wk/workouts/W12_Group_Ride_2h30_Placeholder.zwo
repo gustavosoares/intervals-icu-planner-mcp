@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workout_file>
+  <author>intervals-icu-planner-mcp example</author>
+  <name>Outdoor Group Ride 2h30 (placeholder)</name>
+  <description>Load-planning placeholder for a 2.5h outdoor Z2-Z3 group ride (about 65% FTP average, some Z3). Ride it outdoors; do not use as a trainer workout.</description>
+  <sportType>bike</sportType>
+  <tags><tag name="Endurance"/></tags>
+  <workout>
+    <Warmup Duration="900" PowerLow="0.50" PowerHigh="0.65"><textevent timeoffset="0" message="Placeholder for an outdoor group ride: ride it outside, not on the trainer"/></Warmup>
+    <SteadyState Duration="1500" Power="0.660"><textevent timeoffset="0" message="Group ride: mostly Z2, some Z3 on climbs and pulls"/></SteadyState>
+    <SteadyState Duration="600" Power="0.780"><textevent timeoffset="0" message="Group ride: mostly Z2, some Z3 on climbs and pulls"/></SteadyState>
+    <SteadyState Duration="1200" Power="0.640"><textevent timeoffset="0" message="Group ride: mostly Z2, some Z3 on climbs and pulls"/></SteadyState>
+    <SteadyState Duration="480" Power="0.800"><textevent timeoffset="0" message="Group ride: mostly Z2, some Z3 on climbs and pulls"/></SteadyState>
+    <SteadyState Duration="1200" Power="0.650"><textevent timeoffset="0" message="Group ride: mostly Z2, some Z3 on climbs and pulls"/></SteadyState>
+    <SteadyState Duration="600" Power="0.760"><textevent timeoffset="0" message="Group ride: mostly Z2, some Z3 on climbs and pulls"/></SteadyState>
+    <SteadyState Duration="1500" Power="0.630"><textevent timeoffset="0" message="Group ride: mostly Z2, some Z3 on climbs and pulls"/></SteadyState>
+    <Cooldown Duration="1020" PowerLow="0.58" PowerHigh="0.45"><textevent timeoffset="0" message="Easy roll home"/></Cooldown>
+  </workout>
+</workout_file>
