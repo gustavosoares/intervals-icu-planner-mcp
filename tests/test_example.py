@@ -17,7 +17,7 @@ def test_example_plan_loads():
     assert len(plan.events) == 60
     assert len({e.uid for e in plan.events}) == 60
     assert all(e.uid.startswith("planner-winterbase-w") for e in plan.events)
-    assert Counter(e.category for e in plan.events) == {"WORKOUT": 48, "NOTE": 12}
+    assert Counter(e.category for e in plan.events) == {"WORKOUT": 60}
     assert {e.day for e in plan.events} == {"tue", "wed", "thu", "sat", "sun"}
 
 
@@ -36,10 +36,22 @@ def test_example_four_week_cycles_build_sweet_spot():
     assert not any("Threshold" in name for name in tue.values())
 
 
+def test_example_saturday_is_a_group_ride_placeholder():
+    """Saturdays are a workout (not a note) so each week shows its planned load."""
+    plan = load_plan(str(EXAMPLE))
+    sat = [e for e in plan.events if e.day == "sat"]
+    assert len(sat) == 12
+    for e in sat:
+        assert e.workout is not None
+        assert e.workout.filename == "W12_Group_Ride_2h30_Placeholder.zwo"
+        assert e.workout.total_seconds == 150 * 60
+        assert e.name == "Outdoor group ride (2-3h Z2-Z3)"
+
+
 def test_example_has_no_personal_data():
     """Power targets are %FTP only: no absolute watts, club names or athlete ids."""
     files = [str(EXAMPLE), *glob.glob(os.path.join(EXAMPLE.parent, "workouts", "*.zwo"))]
-    assert len(files) == 14
+    assert len(files) == 15
     for path in files:
         with open(path, encoding="utf-8") as f:
             text = f.read()

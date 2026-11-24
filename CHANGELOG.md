@@ -16,6 +16,10 @@ All notable changes to this project are documented here. The format follows
   ahead (or the plan's own range, if wider), so leftovers of a shorter or
   shifted plan are found, and moved events show as updated, not new.
 - `push_plan` is now annotated as destructive, since it can delete with `prune`.
+- The example plan's Saturday group ride is now a placeholder workout
+  (`W12_Group_Ride_2h30_Placeholder.zwo`) instead of a note, so planned weekly
+  load is realistic.
+- `*.zip` is git-ignored, so exported workout archives aren't committed by mistake.
 
 ## [0.1.0] - Unreleased
 

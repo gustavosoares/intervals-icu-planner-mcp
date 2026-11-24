@@ -134,7 +134,7 @@ Week 1, 2026-11-30
   + 2026-12-01 Tue  WORKOUT  W09_Tempo_60_2x12.zwo
   + 2026-12-02 Wed  WORKOUT  W10_Z2_45.zwo
   + 2026-12-03 Thu  WORKOUT  W04_Z2_60_Neuromuscular_Sprints.zwo
-  + 2026-12-05 Sat  NOTE     Outdoor group ride
+  + 2026-12-05 Sat  WORKOUT  W12_Group_Ride_2h30_Placeholder.zwo
   + 2026-12-06 Sun  WORKOUT  W01_Recovery_Spin_45.zwo
 ...
 60 new, 0 updated, 0 unchanged, 0 stale.
@@ -259,9 +259,14 @@ a shifted plan shows its events as moved rather than new.
 base plan with no threshold work: mostly Z1–Z2 and light tempo, in three
 4-week cycles of two short weeks (weekday rides of 60 minutes or less), one
 longer week, and a sweet spot week. The sweet spot session builds each cycle:
-2×15, then 2×20, then 3×15 minutes. Saturday is an outdoor group ride (a note,
-with an indoor alternative) and Sunday a recovery spin. Monday and Friday are
-rest days. That's 60 events. All targets are % of FTP, so it works for any
+2×15, then 2×20, then 3×15 minutes. Saturday is an outdoor group ride, and
+Sunday a recovery spin. Monday and Friday are rest days. That's 60 events.
+
+The Saturday ride is planned as a **placeholder workout**
+(`W12_Group_Ride_2h30_Placeholder.zwo`, 2h30 at mostly Z2 with some Z3), not
+as a note, so each week shows a realistic planned training load in
+intervals.icu. Ride it outdoors. On a rainy Saturday, the description points
+to `W08_Rainy_Saturday_2h.zwo` for the trainer instead. All targets are % of FTP, so it works for any
 rider once your FTP is set in your training app.
 
 ## Safety design
