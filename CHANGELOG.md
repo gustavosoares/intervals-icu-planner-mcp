@@ -7,6 +7,9 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Changed
+- README: example prompts for building a plan from your goals, reviewing a
+  race or a week, and checking fitness before adjusting the plan, plus how to
+  let Claude save a plan it writes.
 - Install from PyPI: `uvx intervals-icu-planner-mcp`. The README and docs no
   longer need the GitHub URL, and explain upgrading and pinning a version.
 
