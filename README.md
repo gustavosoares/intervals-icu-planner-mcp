@@ -20,20 +20,40 @@ calendar and drag in Tuesday's intervals, Wednesday's endurance ride,
 Saturday's long ride… for twelve weeks. Then you get sick, and all of it
 has to move.
 
-With this, you ask Claude in plain words:
+With this, you ask Claude in plain words.
 
-> *"Put my 12-week winter base plan on my calendar, starting next Monday."*
+**Build a plan for your goal and put it on your calendar**
+
+> *"I'm riding a 100 km sportive on 14 June. I have about 6 hours a week:
+> short indoor rides Tuesday to Thursday, a long ride at the weekend. Build me
+> a plan and put it on my calendar."*
+
+Or, if you already have one: *"Put my 12-week winter base plan on my
+calendar, starting next Monday."*
 
 Claude shows you exactly what it's going to add, and nothing changes until
 you say yes. Then the whole block lands on your intervals.icu calendar, and
 from there each day's workout shows up in **Zwift, MyWhoosh or on your
 Garmin**, ready to ride.
 
-Later you can just ask:
+**See how you did**
 
+- *"I raced on Sunday. How did I do?"*
+- *"Review my rides this week. How did they go compared to the plan?"*
+
+Claude reads your completed rides from intervals.icu (time, power, heart
+rate, training load) and compares them with what was planned and with your
+fitness. Rides that reached intervals.icu through Strava can't be read
+([why](docs/training-apps.md#reading-your-activities)).
+
+**Adjust when life gets in the way**
+
+- *"Check my fitness. Should I rest, or change the plan?"*
 - *"I was sick this week, push the rest of the plan back a week."*
 - *"Move Thursday's sprints to Friday."*
-- *"How did last week go compared to the plan?"*
+
+Claude looks at your fitness, fatigue and form, suggests what to change, and
+shows you the new calendar before changing anything.
 
 It only ever touches the workouts it put there. Your races, notes and
 anything you added by hand are left alone.
@@ -129,15 +149,41 @@ Dry run: nothing was written. Run again with dry_run=false to apply.
 Say "apply it" and the plan lands on your calendar, as in the screenshot
 above. More things to ask:
 
-- *"What's planned for next week?"*
-- *"How did last week go? Compare what was planned with what I rode."*
-- *"Show my fitness, fatigue and form over the last 6 weeks."*
-- *"Move week 3's Thursday session to Friday."*
-- *"I was sick, push the rest of the plan back a week."*
-- *"What's in my workout library?"*
-- *"Remove the winterbase plan from my calendar."*
+- **Plan:**
+  - *"What's planned for next week?"*
+  - *"What's in my workout library?"*
+- **Review:**
+  - *"Review my race on Sunday: power, heart rate and load against my
+    fitness. What went well and what should I work on?"*
+  - *"How did last week go? Compare what was planned with what I rode."*
+- **Adjust:**
+  - *"Check my fitness and form over the last 6 weeks. Am I fresh enough for
+    next week's plan, or should I rest or ease it off?"*
+  - *"Move week 3's Thursday session to Friday."*
+  - *"I was sick, push the rest of the plan back a week."*
+  - *"Remove the winterbase plan from my calendar."*
 
 Anything that writes shows you a dry run first and waits for your OK.
+
+### Building a plan from your goals
+
+Claude writes the plan as files (a `plan.yaml` and `.zwo` workouts) and then
+pushes them, so it needs somewhere to save them. Claude Code can do that
+directly. In Claude Desktop, add a filesystem extension that can write to a
+folder of your choice. For best results, tell Claude to use the example plan
+as its model:
+
+> I'm riding a 100 km sportive on 14 June and have about 6 hours a week:
+> short indoor rides Tuesday to Thursday, a long ride at the weekend. Build me
+> a plan in `~/training/sportive`, using
+> `/path/to/intervals-icu-planner-mcp/examples/winter-base-12wk` as the model
+> for the plan.yaml and the workouts (targets in % of FTP). Then do a dry-run
+> push and show me the diff.
+
+Every plan and workout is checked before anything is sent, so a mistake in
+what Claude wrote is reported, not uploaded. Your answers about fitness and
+when to rest are Claude's suggestions from your intervals.icu numbers, not a
+coach's or doctor's advice.
 
 ## Tools
 
