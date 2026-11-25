@@ -1,17 +1,52 @@
 # intervals-icu-planner-mcp
 
-**Push, inspect and remove whole training plans on your [intervals.icu](https://intervals.icu) calendar from Claude (or the command line), safely.**
+[![tests](https://github.com/gustavosoares/intervals-icu-planner-mcp/actions/workflows/tests.yml/badge.svg)](https://github.com/gustavosoares/intervals-icu-planner-mcp/actions/workflows/tests.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Python 3.10–3.13](https://img.shields.io/badge/python-3.10%E2%80%933.13-blue.svg)
+[![MCP server](https://img.shields.io/badge/MCP-server-8A2BE2.svg)](https://modelcontextprotocol.io)
 
-<!-- TODO: replace with a demo GIF: Claude runs push_plan as a dry run, shows the diff, then applies it -->
-> 🎬 *Demo GIF coming soon.*
+**Plan a whole training block with Claude and put it on your
+[intervals.icu](https://intervals.icu) calendar in one go, safely.**
 
-You describe a training block once in a `plan.yaml`: week templates,
-per-week changes, recovery weeks, notes for outdoor rides, and the `.zwo`
-workouts. This MCP server turns it into dated calendar events, shows you a
-diff against what's already there, and writes only when you say so.
-intervals.icu then syncs the workouts to Zwift, MyWhoosh and Garmin.
+![One week of the example plan on the intervals.icu calendar](docs/images/calendar-week.png)
 
-## Why this exists
+<!-- TODO: add a short GIF of Claude showing a dry-run diff and applying it -->
+
+## What it's for
+
+If you train with a plan, you know the routine: every week you open the
+calendar and drag in Tuesday's intervals, Wednesday's endurance ride,
+Saturday's long ride… for twelve weeks. Then you get sick, and all of it
+has to move.
+
+With this, you ask Claude in plain words:
+
+> *"Put my 12-week winter base plan on my calendar, starting next Monday."*
+
+Claude shows you exactly what it's going to add, and nothing changes until
+you say yes. Then the whole block lands on your intervals.icu calendar, and
+from there each day's workout shows up in **Zwift, MyWhoosh or on your
+Garmin**, ready to ride.
+
+Later you can just ask:
+
+- *"I was sick this week, push the rest of the plan back a week."*
+- *"Move Thursday's sprints to Friday."*
+- *"How did last week go compared to the plan?"*
+
+It only ever touches the workouts it put there. Your races, notes and
+anything you added by hand are left alone.
+
+<details>
+<summary>What's an MCP server?</summary>
+
+[MCP](https://modelcontextprotocol.io) is how apps like Claude get new
+abilities. This project is a small program that runs on your computer and
+gives Claude a few safe tools for your intervals.icu calendar. Claude
+decides when to use them, and asks you before writing anything.
+</details>
+
+## Why plan-level
 
 General intervals.icu MCP servers expose the API one event at a time: create
 an event, delete an event, list activities. That works for a single workout.
@@ -20,14 +55,14 @@ them together and nothing that shows you what will change first.
 
 This server works on **whole plans**:
 
-- **One file, one plan.** `push_plan` validates the plan and every workout,
-  then upserts the whole block. Edit the file and push again: events are
-  updated in place, never duplicated.
+- **One file, one plan.** You describe the block once in a `plan.yaml`
+  (week templates, per-week changes, recovery weeks) plus `.zwo` workouts.
+  Edit the file and push again: events are updated in place, never duplicated.
 - **Diff before write.** Every write tool is a dry run by default and returns
   a per-date diff (`+` new, `~` updated, `=` unchanged, `!` stale).
 - **A plan only touches its own events.** Each event carries a uid,
   `planner-<plan_id>-w<NN>-<day>`, and the server never modifies an event
-  without one. Your races, notes and other workouts are invisible to it.
+  without one.
 - **Reversible.** `delete_plan` removes exactly the events a plan created, and
   `push_plan` with `prune=true` removes the ones you took out of the plan.
 
@@ -36,96 +71,48 @@ you can ask Claude how the block is going.
 
 ## Quick start
 
-### 1. Get an API key
+1. **Get an API key**: intervals.icu → **Settings** → **Developer Settings** →
+   **API key**. On a Mac, keep it in the Keychain rather than in a config
+   file: see [docs/setup.md](docs/setup.md).
+2. **Install [uv](https://docs.astral.sh/uv/)**, then add the server.
 
-intervals.icu → **Settings** → **Developer Settings** → **API key**.
+   **Claude Desktop** (Settings → Developer → Edit Config):
 
-#### On a Mac: keep it in the Keychain (recommended)
+   ```json
+   {
+     "mcpServers": {
+       "intervals-icu-planner": {
+         "command": "uvx",
+         "args": [
+           "--from", "git+https://github.com/gustavosoares/intervals-icu-planner-mcp",
+           "intervals-icu-planner-mcp"
+         ],
+         "env": { "INTERVALS_ICU_API_KEY": "your-key-here" }
+       }
+     }
+   }
+   ```
 
-Don't leave the key in plain text in config files or your shell profile. Store it
-in the macOS Keychain instead:
+   **Claude Code**:
 
-```sh
-security add-generic-password -a "$USER" -s INTERVALS_ICU_API_KEY -w
-```
+   ```sh
+   claude mcp add -s user intervals-icu-planner -e INTERVALS_ICU_API_KEY=your-key-here -- \
+     uvx --from git+https://github.com/gustavosoares/intervals-icu-planner-mcp intervals-icu-planner-mcp
+   ```
 
-With `-w` and no value, `security` asks for the key, so it doesn't end up in
-your shell history. To replace a stored key later, add `-U`.
+3. **Restart Claude** and check the `intervals-icu-planner` tools are listed.
+   If they aren't, see [docs/troubleshooting.md](docs/troubleshooting.md).
 
-**For the CLI and Claude Code**, load it into your shell. Add this line to
-`~/.zshrc` (or `~/.bashrc`):
+## Try it
 
-```sh
-export INTERVALS_ICU_API_KEY=$(security find-generic-password -w -a "$USER" -s INTERVALS_ICU_API_KEY)
-```
+Clone the repo for the [example plan](examples/winter-base-12wk/) (12 weeks
+of winter base, all targets in % of FTP), then paste this into Claude:
 
-Then run `source ~/.zshrc`. Programs you start from that shell, including
-`claude`, get the key from the Keychain, and it's never written to a file.
+> Push `/path/to/intervals-icu-planner-mcp/examples/winter-base-12wk/plan.yaml`
+> starting next Monday. Show me the dry run first and don't apply anything
+> until I say so.
 
-**For Claude Desktop**, the shell profile doesn't help: apps launched from
-the Dock don't read `~/.zshrc`. Have the server read the Keychain when it
-starts instead. Use this config in place of the one in step 2:
-
-```json
-{
-  "mcpServers": {
-    "intervals-icu-planner": {
-      "command": "/bin/sh",
-      "args": [
-        "-c",
-        "INTERVALS_ICU_API_KEY=$(security find-generic-password -w -s INTERVALS_ICU_API_KEY) exec uvx --from git+https://github.com/gustavosoares/intervals-icu-planner-mcp intervals-icu-planner-mcp"
-      ]
-    }
-  }
-}
-```
-
-The same wrapper works in Claude Code if you don't want the key in your shell:
-
-```sh
-claude mcp add intervals-icu-planner -- /bin/sh -c \
-  'INTERVALS_ICU_API_KEY=$(security find-generic-password -w -s INTERVALS_ICU_API_KEY) exec uvx --from git+https://github.com/gustavosoares/intervals-icu-planner-mcp intervals-icu-planner-mcp'
-```
-
-To check the key is stored, run
-`security find-generic-password -s INTERVALS_ICU_API_KEY`. It shows the entry
-but not the key. To remove it, run
-`security delete-generic-password -s INTERVALS_ICU_API_KEY`.
-
-### 2. Add the server to Claude Desktop
-
-Edit `claude_desktop_config.json` (Claude Desktop → Settings → Developer →
-Edit Config). You need [uv](https://docs.astral.sh/uv/) installed.
-
-```json
-{
-  "mcpServers": {
-    "intervals-icu-planner": {
-      "command": "uvx",
-      "args": [
-        "--from", "git+https://github.com/gustavosoares/intervals-icu-planner-mcp",
-        "intervals-icu-planner-mcp"
-      ],
-      "env": { "INTERVALS_ICU_API_KEY": "your-key-here" }
-    }
-  }
-}
-```
-
-This stores the key in plain text in the config file. On a Mac, use the
-Keychain version above instead.
-
-Once the package is on PyPI this becomes `"args": ["intervals-icu-planner-mcp"]`.
-
-For Claude Code: `claude mcp add intervals-icu-planner -e INTERVALS_ICU_API_KEY=your-key-here -- uvx --from git+https://github.com/gustavosoares/intervals-icu-planner-mcp intervals-icu-planner-mcp`.
-
-### 3. First dry run
-
-Clone the repo (or write your own plan), then ask Claude:
-
-> Push `/path/to/intervals-icu-planner-mcp/examples/winter-base-12wk/plan.yaml`, starting next Monday.
-
-Claude calls `push_plan` with `dry_run=true` and shows you the diff:
+Claude calls `push_plan` as a dry run and shows you the diff:
 
 ```
 Winter Base 12 Weeks (winterbase): 12 weeks, 2026-11-30 -> 2027-02-21
@@ -141,10 +128,20 @@ Week 1, 2026-11-30
 Dry run: nothing was written. Run again with dry_run=false to apply.
 ```
 
-Nothing is on your calendar yet. Tell Claude to apply it and it calls
-`push_plan` again with `dry_run=false`.
+Say "apply it" and the plan lands on your calendar, as in the screenshot
+above. More things to ask:
 
-### Tools
+- *"What's planned for next week?"*
+- *"How did last week go? Compare what was planned with what I rode."*
+- *"Show my fitness, fatigue and form over the last 6 weeks."*
+- *"Move week 3's Thursday session to Friday."*
+- *"I was sick, push the rest of the plan back a week."*
+- *"What's in my workout library?"*
+- *"Remove the winterbase plan from my calendar."*
+
+Anything that writes shows you a dry run first and waits for your OK.
+
+## Tools
 
 | Tool | What it does | Writes? |
 |---|---|---|
@@ -157,253 +154,54 @@ Nothing is on your calendar yet. Tell Claude to apply it and it calls
 | `shift_plan(plan_yaml, weeks=1, from_week?, dry_run=true)` | Push the rest of the plan back N weeks (illness, travel); past weeks stay | only with `dry_run=false` |
 | `list_library(folder?)` | Your intervals.icu workout library: folders and plans with their workouts | no |
 
-`plan_yaml` is a path to the file. Relative `workouts_dir` paths are resolved
-from the plan file's folder. `delete_plan` searches one year back and two
-years ahead by default; pass `oldest` / `newest` for anything outside that.
+`plan_yaml` is a path to the file. Everything also works from the
+command line: see [docs/cli.md](docs/cli.md).
 
-## plan.yaml reference
-
-A [JSON Schema](schemas/plan.schema.json) is included. Editors with the YAML
-language server (e.g. VS Code's YAML extension) validate and autocomplete
-plans when the file starts with:
+## Writing your own plan
 
 ```yaml
 # yaml-language-server: $schema=https://raw.githubusercontent.com/gustavosoares/intervals-icu-planner-mcp/main/schemas/plan.schema.json
-```
-
-```yaml
-id: winterbase             # required; lowercase letters, digits, - and _ (max 40)
-name: Winter Base 12wk     # required
-start: 2026-11-30          # required; Monday of week 1 (start_date / --start overrides it)
-workouts_dir: workouts     # .zwo folder, relative to plan.yaml (default: workouts)
-type: Ride                 # intervals.icu activity type for workouts (default: Ride)
-
-templates:                 # required; named weeks: mon, tue, wed, thu, fri, sat, sun
+id: myblock
+name: My 3-week block
+start: 2026-11-30            # a Monday
+templates:
   build:
-    tue: S1_SweetSpot_2x15.zwo             # a .zwo file name -> WORKOUT event
-    thu:
-      workout: W04_Z2_60_Neuromuscular_Sprints.zwo
-      name: Sprints                        # optional: overrides the <name> in the .zwo
-      description: ERG off for the sprints # optional
-    sat:
-      note: Outdoor group ride             # a note -> NOTE event, no workout file
-      description: Bad weather? Ride W08 indoors.
-  recovery:
-    tue: W02_Z2_Endurance_60_Cadence.zwo
-    sat: { note: Recovery week - easy ride or skip }
-
-weeks:                     # required; in order, the first item is week 1
+    tue: W09_Tempo_60_2x12.zwo
+    thu: W04_Z2_60_Neuromuscular_Sprints.zwo
+    sat: { note: Long outdoor ride }
+weeks:
   - { template: build }
-  - { template: build, overrides: { tue: W06_Tempo_3x10.zwo, sun: null } }
-  - { template: recovery, recovery: true }
+  - { template: build, overrides: { thu: W06_Tempo_3x10.zwo } }
+  - { template: build, overrides: { thu: null }, recovery: true }
 ```
 
-Rules:
+Workouts are `.zwo` files in a `workouts/` folder next to the plan. The first
+line gives you validation and autocomplete in editors with the YAML language
+server. The full reference (overrides, notes, re-pushing, pruning, moving and
+shifting) is in [docs/plan-reference.md](docs/plan-reference.md).
 
-- Days left out of a template have nothing scheduled.
-- `overrides` are merged over the week's template, day by day. `day: null`
-  removes that day's session.
-- `recovery: true` just marks the week in the output. What makes it a
-  recovery week is the template you give it.
-- A workout's name comes from the `<name>` in its `.zwo`, or from the file
-  name if there is none.
-- Events are all-day entries (`T00:00:00` local time).
-- Every problem in the plan is reported together, before anything is sent.
+## Safety
 
-### uids and re-pushing
+This writes to your real training calendar, so it's built to be hard to misuse:
 
-Each event's uid is `planner-<id>-w<NN>-<day>`, for example
-`planner-winterbase-w03-tue`. The uid has no date in it, so changing a
-workout, or shifting the whole plan with `start_date`, updates the existing
-events instead of adding new ones. Events are sent to
-`POST /api/v1/athlete/0/events/bulk?upsert=true` with the plan uid in
-`external_id` (intervals.icu gives every event its own separate `uid`, so
-that field is left alone) and the `.zwo` sent as-is in `file_contents`.
+- **Dry run first**: every write returns a diff and waits for your OK.
+- **Only its own events**: nothing without the plan's exact uid is touched or even shown.
+- **Validate before upload**: the plan and every `.zwo` are checked, and one error means nothing is sent.
+- **The API key stays private**: never logged, printed or put in error messages.
+- **Careful file edits**: moves and shifts are previewed, never touch the past, and are written atomically.
 
-The diff compares date, category, name and (for notes) description. intervals.icu
-doesn't return the original `.zwo`, so a workout is compared by name and
-duration: if you change the inside of a workout but keep its name and total
-length, the diff shows it as unchanged and it isn't re-sent. Rename it (or
-change `name:`) to force an update.
+Details in [docs/safety.md](docs/safety.md).
 
-### Removing sessions: stale events and `prune`
+## Documentation
 
-If you take a session out of the plan (`day: null`, a shorter `weeks` list,
-a different template), the event already on the calendar becomes **stale**:
-it has the plan's uid, but the plan no longer produces it. The diff marks it
-`!`, and a normal push leaves it alone.
-
-Push with `prune=true` (CLI: `--prune`) to delete stale events too. In the
-dry run they show as `-`. Here, a few weeks into the plan, two sessions were
-taken out (`day: null`), one already ridden and one still to come:
-
-```
-Stale: on the calendar with this plan's uid but no longer in the plan.
-Pruning deletes the ones from today on (-); earlier ones are kept (!).
-  - 2026-12-22  WORKOUT  Tempo 60min (2x12)  planner-winterbase-w05-tue
-  ! 2026-11-25  WORKOUT  Z2 Endurance 45min  planner-winterbase-w01-wed  (past, kept)
-
-0 new, 0 updated, 58 unchanged, 2 stale (1 to delete).
-```
-
-Pruning only deletes events dated **today or later**, so your past planned
-sessions stay on the calendar. It runs after the upsert, so if the upsert
-fails nothing is deleted. Like everything else, it only matches this plan's
-own uids.
-
-To find stale events, a push searches one year back and two years ahead
-(further if the plan goes further), not only the plan's own dates. Events
-left behind by a shorter or shifted version of the plan are found too, and
-a shifted plan shows its events as moved rather than new.
-
-### Example
-
-[`examples/winter-base-12wk/`](examples/winter-base-12wk/) is a 12-week winter
-base plan with no threshold work: mostly Z1–Z2 and light tempo, in three
-4-week cycles of two short weeks (weekday rides of 60 minutes or less), one
-longer week, and a sweet spot week. The sweet spot session builds each cycle:
-2×15, then 2×20, then 3×15 minutes. Saturday is an outdoor group ride, and
-Sunday a recovery spin. Monday and Friday are rest days. That's 60 events.
-
-The Saturday ride is planned as a **placeholder workout**
-(`W12_Group_Ride_2h30_Placeholder.zwo`, 2h30 at mostly Z2 with some Z3), not
-as a note, so each week shows a realistic planned training load in
-intervals.icu. Ride it outdoors. On a rainy Saturday, the description points
-to `W08_Rainy_Saturday_2h.zwo` for the trainer instead. All targets are % of FTP, so it works for any
-rider once your FTP is set in your training app.
-
-### Moving sessions and shifting the plan
-
-`plan.yaml` is the source of truth, so these tools **change the file** and then
-sync the calendar. Changing only the calendar would be undone by your next
-push. The dry run shows both: the `plan.yaml` diff and the calendar diff.
-
-**`move_workout`** moves one session, e.g. "week 3, Tuesday to Friday". It
-writes the smallest possible override for that week (`tue: null, fri: ...`),
-and moving it back removes the override again. It refuses to:
-
-- move a session that's already in the past, or move one into the past;
-- move onto a day that already has a session (pass `swap=true` to trade places);
-- move from a day that has no session.
-
-Because uids are `w<NN>-<day>`, a move is a delete plus a create on the
-calendar: `+ Fri` and `- Tue` in the diff.
-
-**`shift_plan`** is for "I was sick, push the rest back a week":
-
-- **Nothing ridden yet** (no session before today): `start` moves by N weeks,
-  and every event is moved in place.
-- **Under way:** N empty `rest` weeks are inserted before `from_week` (default:
-  the current week), and an empty `rest: {}` template is added if the plan has
-  none. That week and everything after it move N weeks later. Past sessions stay
-  on the calendar where they happened; pruning never deletes the past. `# Week N`
-  comments on the weeks list are renumbered.
-
-When editing, comments and layout are kept: every line the edit doesn't
-change stays byte for byte as you wrote it. If someone else changes the file
-while the tool runs, nothing is written. The file is written first (git can
-undo it), then the calendar is synced. If the sync fails, the error tells you
-to finish with `push_plan(prune=true)`.
-
-## Safety design
-
-These rules are the core of the project. Each one is covered by tests.
-
-1. **Dry run first.** `push_plan` and `delete_plan` default to `dry_run=true`
-   and return the diff (or the list of events to delete) without writing. The
-   server's instructions tell the model to show you that output and wait for
-   your OK before calling again with `dry_run=false`. The CLI's write commands
-   need `--apply`. Tests assert that a dry run never calls a write endpoint.
-   A push never deletes anything unless you also pass `prune=true` (`--prune`),
-   and pruning never deletes past events.
-2. **Only its own uids.** An event belongs to plan `X` only if its uid fully
-   matches `planner-X-w<NN>-<day>`. That's an exact pattern, not a prefix
-   test, so plan `winter` can never touch plan `winter-base`. Events without
-   such a uid (your races, notes and manually added workouts) are never
-   updated or deleted. They don't show up in the diff either. Before the
-   delete request is sent, each event is checked against the pattern again.
-3. **Validate before upload.** Every plan is checked against the schema, and
-   every `.zwo` is checked before any network call:
-   - well-formed XML (DOCTYPE/ENTITY declarations rejected);
-   - only known segment types: SteadyState, Warmup, Cooldown, Ramp,
-     IntervalsT, FreeRide, MaxEffort, SolidState;
-   - every duration > 0;
-   - every power target a ratio in (0, 3] of FTP (so `250` watts written by
-     mistake is caught);
-   - total length under 6 hours.
-
-   A plan with any error sends nothing.
-4. **The API key stays private.** It's read from the `INTERVALS_ICU_API_KEY`
-   environment variable, or from a `.env` file in the working directory
-   (`.env` is git-ignored). It's never logged, printed, or included in error
-   messages or object reprs.
-5. **Edits to `plan.yaml` are previewed and careful.** `move_workout` and
-   `shift_plan` show the file diff in the dry run, never touch past sessions,
-   refuse to overwrite a file that changed meanwhile, and write it atomically.
-   `list_library` only reads.
-
-## Syncing to your training apps
-
-intervals.icu sends planned workouts to the apps you connect under
-**Settings → Connections**:
-
-- **Zwift** and **MyWhoosh**: the day's planned workouts show up in the app's
-  workout list, ready to ride.
-- **Garmin Connect**: workouts land on the Garmin Connect calendar and reach
-  your device on its next sync.
-
-Only the **next 7 days** are synced, not the whole plan. If you push 12 weeks,
-the apps show this week's sessions, and later weeks appear as the window moves
-forward. If a workout is missing in the app, check that it falls within the
-next 7 days, then re-sync or reopen the app. Changes you push again are picked
-up the same way.
-
-**Turn ERG mode off for sprint intervals**, and ride them in resistance or
-slope mode instead. In ERG the trainer holds the target wattage, so you can't
-sprint above it. Short all-out efforts like the 10-second sprints in
-`W04_Z2_60_Neuromuscular_Sprints.zwo` only work when you control the power.
-The target in the file is a placeholder.
-
-## Reading your activities
-
-`get_activities` lists completed rides with intervals.icu's numbers: moving
-time, distance, training load, average and normalized power, intensity factor
-and average heart rate. Combined with `get_fitness` and `get_planned`, Claude
-can compare what was planned with what was ridden.
-
-One limitation: **activities that reached intervals.icu through Strava can't
-be read via the API** (Strava's terms forbid it). They're listed as
-"Strava import: details not available via API". Connect Garmin, Zwift,
-MyWhoosh etc. to intervals.icu directly to see them.
-
-## CLI
-
-The same core works without MCP:
-
-```sh
-pip install git+https://github.com/gustavosoares/intervals-icu-planner-mcp
-export INTERVALS_ICU_API_KEY=your-key-here      # or put it in .env
-
-intervals-icu-planner push plan.yaml                       # dry run: prints the diff
-intervals-icu-planner push plan.yaml --start 2027-01-04    # shift the plan
-intervals-icu-planner push plan.yaml --apply               # write it
-intervals-icu-planner push plan.yaml --prune --apply       # write it and delete removed sessions
-
-intervals-icu-planner planned 2026-12-01 2026-12-31 [--plan-id winterbase]
-intervals-icu-planner delete winterbase                    # dry run: lists what would go
-intervals-icu-planner delete winterbase --apply
-intervals-icu-planner fitness 2026-11-01 2026-11-30
-intervals-icu-planner activities 2026-11-01 2026-11-30
-intervals-icu-planner move plan.yaml 3 tue fri             # dry run: plan.yaml + calendar diff
-intervals-icu-planner move plan.yaml 3 tue wed --swap --apply
-intervals-icu-planner shift plan.yaml --weeks 1            # dry run: push the rest back a week
-intervals-icu-planner library [--folder winter]            # list the workout library
-intervals-icu-planner schema                               # print the plan.yaml JSON Schema
-```
-
-`push` works without an API key as an offline dry run (the calendar isn't
-checked, so everything shows as new). Exit codes: 0 ok, 1 API error, 2
-invalid input or missing key.
+- [Setup](docs/setup.md): API key, the macOS Keychain, Claude Desktop and Claude Code
+- [plan.yaml reference](docs/plan-reference.md): fields, uids, pruning, moving and shifting, the example plan
+- [Training apps and activities](docs/training-apps.md): Zwift, MyWhoosh, Garmin, ERG mode, Strava limits
+- [CLI](docs/cli.md): every command
+- [Safety design](docs/safety.md)
+- [How it works](docs/how-it-works.md): architecture and intervals.icu API notes
+- [Troubleshooting](docs/troubleshooting.md)
+- [Contributing](CONTRIBUTING.md) and [Changelog](CHANGELOG.md)
 
 ## Roadmap
 
@@ -411,20 +209,6 @@ invalid input or missing key.
 - OAuth and the streamable HTTP transport, for claude.ai custom connectors
 - Writing to the workout library (import or remove workouts in one dedicated folder)
 - PyPI release
-
-## Development
-
-```sh
-pip install -e ".[dev]"
-pytest              # HTTP is mocked with respx; no network
-ruff check . && ruff format --check .
-mypy
-```
-
-The code is in [`src/intervals_icu_planner_mcp/`](src/intervals_icu_planner_mcp/).
-`client.py` is the HTTP client, with no MCP code in it. `plan.py`, `zwo.py` and
-`diff.py` hold the plan logic. `planner.py` has the operations, shared by
-`server.py` (MCP) and `cli.py`. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## A note on AI assistance
 
