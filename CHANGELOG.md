@@ -6,20 +6,52 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+- Install from PyPI: `uvx intervals-icu-planner-mcp`. The README and docs no
+  longer need the GitHub URL, and explain upgrading and pinning a version.
+
+## [0.1.0] - 2026-11-25
+
+First release on PyPI.
+
 ### Added
+- MCP server (stdio) with eight tools: `push_plan`, `get_planned`,
+  `delete_plan`, `get_fitness`, `get_activities`, `move_workout`,
+  `shift_plan` and `list_library`.
+- Calendar diff before every write: new / updated / unchanged per date, plus
+  stale events the plan no longer produces.
+- `dry_run=true` by default for every write tool; `--apply` required in the CLI.
+- Event uids `planner-<plan_id>-w<NN>-<day>`, matched exactly: a plan only
+  ever modifies its own events.
+- `.zwo` validation before upload: well-formed XML, known segments,
+  durations > 0, power ratios in (0, 3], total under 6 hours.
+- plan.yaml JSON Schema (`schemas/plan.schema.json`), generated from the
+  pydantic models, with named week templates and a `weeks` list.
+- CLI `intervals-icu-planner` with `push`, `delete`, `planned`, `fitness`,
+  `activities`, `move`, `shift`, `library` and `schema` subcommands.
+- httpx-based API client, independent of MCP.
+- Example 12-week winter base plan.
+- CI: ruff, mypy (strict) and pytest on Python 3.10–3.13.
 - A manual `publish` workflow that uploads to TestPyPI or PyPI with trusted
   publishing, restricted to the maintainer, then tags the release. The PyPI
   page's README links point to GitHub.
+- `push_plan(prune=true)` / `push --prune`: also delete the plan's stale
+  events (sessions removed from the plan), from today on. Past events are
+  never pruned, and deletion runs only after the upsert succeeds.
 - `move_workout` / `move`: move one session to another day (or swap two),
   by editing plan.yaml and syncing with prune. Comments and layout are kept.
 - `shift_plan` / `shift`: push the rest of a plan back N weeks. Past weeks
   stay; a plan with no sessions ridden yet just moves its start.
 - `list_library` / `library`: read-only list of the workout library.
-- `push_plan(prune=true)` / `push --prune`: also delete the plan's stale
-  events (sessions removed from the plan), from today on. Past events are
-  never pruned, and deletion runs only after the upsert succeeds.
 
-### Changed
+### Changed (from the unreleased prototype)
+- The API key variable is now `INTERVALS_ICU_API_KEY`. `INTERVALS_API_KEY`
+  still works but prints a deprecation warning.
+- uids gained the `planner-` prefix. Events pushed by the prototype
+  (`<id>-wNN-<day>`) aren't recognised; delete them from the calendar first.
+- plan.yaml: `template` / `recovery` / `overrides` / `weeks: N` were replaced
+  by named `templates` and a `weeks` list.
+- Requires Python 3.10+.
 - README rewritten for riders, not only developers: a calendar screenshot,
   a plain-language "what it's for", and example prompts to paste into Claude.
   The detailed reference moved to `docs/` (setup, plan reference, safety,
@@ -33,33 +65,5 @@ All notable changes to this project are documented here. The format follows
   load is realistic.
 - `*.zip` is git-ignored, so exported workout archives aren't committed by mistake.
 
-## [0.1.0] - Unreleased
-
-### Added
-- MCP server (stdio) with five tools: `push_plan`, `get_planned`,
-  `delete_plan`, `get_fitness` and `get_activities`.
-- Calendar diff before every write: new / updated / unchanged per date, plus
-  stale events the plan no longer produces.
-- `dry_run=true` by default for every write tool; `--apply` required in the CLI.
-- Event uids `planner-<plan_id>-w<NN>-<day>`, matched exactly: a plan only
-  ever modifies its own events.
-- `.zwo` validation before upload: well-formed XML, known segments,
-  durations > 0, power ratios in (0, 3], total under 6 hours.
-- plan.yaml JSON Schema (`schemas/plan.schema.json`), generated from the
-  pydantic models, with named week templates and a `weeks` list.
-- CLI `intervals-icu-planner` with `push`, `delete`, `planned`, `fitness`,
-  `activities` and `schema` subcommands.
-- httpx-based API client, independent of MCP.
-- Example 12-week winter base plan.
-- CI: ruff, mypy (strict) and pytest on Python 3.10–3.13.
-
-### Changed (from the unreleased prototype)
-- The API key variable is now `INTERVALS_ICU_API_KEY`. `INTERVALS_API_KEY`
-  still works but prints a deprecation warning.
-- uids gained the `planner-` prefix. Events pushed by the prototype
-  (`<id>-wNN-<day>`) aren't recognised; delete them from the calendar first.
-- plan.yaml: `template` / `recovery` / `overrides` / `weeks: N` were replaced
-  by named `templates` and a `weeks` list.
-- Requires Python 3.10+.
-
+[Unreleased]: https://github.com/gustavosoares/intervals-icu-planner-mcp/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/gustavosoares/intervals-icu-planner-mcp/releases/tag/v0.1.0

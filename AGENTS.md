@@ -157,8 +157,9 @@ stack, never only in `server.py` or `cli.py`.
   read from the macOS Keychain through a `/bin/sh -c` wrapper (see README).
 - `claude mcp add` without `-s user` registers the server **only for the
   current directory**. A local-scope entry overrides a user-scope one.
-- Until the package is on PyPI, install with
-  `uvx --from git+https://github.com/gustavosoares/intervals-icu-planner-mcp[@branch] intervals-icu-planner-mcp`.
+- The package is on PyPI (`uvx intervals-icu-planner-mcp`), released by the
+  manual `publish` workflow (see CONTRIBUTING). To run an unreleased branch,
+  use `uvx --from git+https://github.com/gustavosoares/intervals-icu-planner-mcp@<branch> intervals-icu-planner-mcp`.
   On `main` before the MCP PR merged, that entry point was the old CLI.
 
 ## Conventions

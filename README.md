@@ -1,5 +1,6 @@
 # intervals-icu-planner-mcp
 
+[![PyPI](https://img.shields.io/pypi/v/intervals-icu-planner-mcp.svg)](https://pypi.org/project/intervals-icu-planner-mcp/)
 [![tests](https://github.com/gustavosoares/intervals-icu-planner-mcp/actions/workflows/tests.yml/badge.svg)](https://github.com/gustavosoares/intervals-icu-planner-mcp/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Python 3.10–3.13](https://img.shields.io/badge/python-3.10%E2%80%933.13-blue.svg)
@@ -83,10 +84,7 @@ you can ask Claude how the block is going.
      "mcpServers": {
        "intervals-icu-planner": {
          "command": "uvx",
-         "args": [
-           "--from", "git+https://github.com/gustavosoares/intervals-icu-planner-mcp",
-           "intervals-icu-planner-mcp"
-         ],
+         "args": ["intervals-icu-planner-mcp"],
          "env": { "INTERVALS_ICU_API_KEY": "your-key-here" }
        }
      }
@@ -97,7 +95,7 @@ you can ask Claude how the block is going.
 
    ```sh
    claude mcp add -s user intervals-icu-planner -e INTERVALS_ICU_API_KEY=your-key-here -- \
-     uvx --from git+https://github.com/gustavosoares/intervals-icu-planner-mcp intervals-icu-planner-mcp
+     uvx intervals-icu-planner-mcp
    ```
 
 3. **Restart Claude** and check the `intervals-icu-planner` tools are listed.
@@ -208,7 +206,6 @@ Details in [docs/safety.md](docs/safety.md).
 - Activity analysis: planned vs completed, compliance per week
 - OAuth and the streamable HTTP transport, for claude.ai custom connectors
 - Writing to the workout library (import or remove workouts in one dedicated folder)
-- PyPI release
 
 ## A note on AI assistance
 
