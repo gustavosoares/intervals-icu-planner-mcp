@@ -28,6 +28,14 @@ def event_uid(event: dict[str, Any]) -> str:
     return str(event.get("external_id") or event.get("uid") or "")
 
 
+def event_app(event: dict[str, Any]) -> int | None:
+    """The OAuth app that created an event; None for one created with an API key."""
+    try:
+        return int(event.get("oauth_client_id") or 0) or None
+    except (TypeError, ValueError):
+        return None
+
+
 def event_date(event: dict[str, Any]) -> str:
     return str(event.get("start_date_local") or "")[:10]
 
@@ -38,6 +46,7 @@ class Change:
     event: PlannedEvent
     existing_id: int | None = None
     fields: tuple[str, ...] = ()  # what changed, for "updated"
+    existing_app: int | None = None  # OAuth app that created the existing event (None: API key)
 
 
 @dataclass
@@ -110,7 +119,13 @@ def compute_diff(plan: Plan, existing: Iterable[dict[str, Any]] | None) -> Diff:
             continue
         fields = compare(planned, found)
         changes.append(
-            Change("updated" if fields else "unchanged", planned, found.get("id"), fields)
+            Change(
+                "updated" if fields else "unchanged",
+                planned,
+                found.get("id"),
+                fields,
+                event_app(found),
+            )
         )
 
     stale = sorted(mine.values(), key=lambda e: (event_date(e), event_uid(e)))

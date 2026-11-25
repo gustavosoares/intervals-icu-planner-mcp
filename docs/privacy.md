@@ -2,7 +2,7 @@
 
 [← Back to README](../README.md)
 
-Effective 24 November 2026. Applies to intervals-icu-planner-mcp: the MCP
+Effective 25 November 2026. Applies to intervals-icu-planner-mcp: the MCP
 server, the CLI and the Claude Desktop extension.
 
 ## In short
@@ -40,10 +40,11 @@ intervals.icu API:
 
 ## Your credentials
 
-Your intervals.icu API key (or, if you sign in with intervals.icu, the access
-token it issues) is stored only on your computer: in your system keychain
-when you use the Claude Desktop extension, or wherever you put it (an
-environment variable or a `.env` file). It is used only to call the
+If you sign in with intervals.icu, the access token it issues is stored only
+on your computer, in your system keychain (or, on a system without one, in a
+file only you can read). An API key is stored in your system keychain when
+you use the Claude Desktop extension, or wherever you put it (an environment
+variable or a `.env` file). It is used only to call the
 intervals.icu API, and it is never logged, printed or included in error
 messages.
 
@@ -51,9 +52,11 @@ messages.
 
 - Uninstall the extension, or remove the server from your AI app's
   configuration.
-- Revoke access in intervals.icu: generate a new API key under **Settings →
-  Developer Settings**, or remove the app's access from your intervals.icu
-  settings if you signed in with intervals.icu.
+- Sign out with `intervals-icu-planner logout`, which revokes the access
+  and deletes the token.
+- Revoke access in intervals.icu: remove **intervals-icu-planner-mcp** under
+  **Settings → Apps** if you signed in with intervals.icu, or generate a new
+  API key under **Settings → Developer Settings**.
 - To remove the plans it put on your calendar, use `delete_plan`, or delete
   the events in intervals.icu.
 

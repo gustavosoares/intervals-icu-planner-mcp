@@ -8,6 +8,7 @@ intervals-icu-planner activities OLDEST NEWEST
 intervals-icu-planner move plan.yaml WEEK DAY TO_DAY [--to-week N] [--swap] [--apply]
 intervals-icu-planner shift plan.yaml [--weeks N] [--from-week N] [--apply]
 intervals-icu-planner library [--folder NAME]
+intervals-icu-planner login | logout
 intervals-icu-planner schema
 intervals-icu-planner guide
 """
@@ -18,9 +19,9 @@ import argparse
 import json
 import sys
 
-from . import __version__, guide, planner
-from .client import ApiError, IntervalsClient
-from .config import find_api_key, find_plans_dir
+from . import __version__, guide, oauth, planner
+from .client import ApiError
+from .config import find_api_key, find_plans_dir, make_client
 from .plan import PlanError, plan_json_schema
 
 EXIT_OK, EXIT_API, EXIT_INPUT = 0, 1, 2
@@ -82,6 +83,8 @@ def build_parser() -> argparse.ArgumentParser:
     lib = sub.add_parser("library", help="list the workout library (read-only)")
     lib.add_argument("--folder", help="only folders whose name contains this")
 
+    sub.add_parser("login", help="sign in with intervals.icu in your browser (no API key needed)")
+    sub.add_parser("logout", help="revoke and forget the saved intervals.icu sign-in")
     sub.add_parser("schema", help="print the plan.yaml JSON Schema")
     sub.add_parser("guide", help="print how to write a plan.yaml and its .zwo workouts")
     return ap
@@ -96,8 +99,12 @@ def main(argv: list[str] | None = None) -> int:
         print(guide.plan_guide(), end="")
         return EXIT_OK
 
-    key = find_api_key()
-    client = IntervalsClient.from_api_key(key) if key else None
+    if args.command == "login":
+        return login()
+    if args.command == "logout":
+        return logout()
+
+    client = make_client()
     try:
         if args.command == "push":
             out = planner.push(
@@ -163,6 +170,44 @@ def main(argv: list[str] | None = None) -> int:
         if client is not None:
             client.close()
     print(out)
+    return EXIT_OK
+
+
+def login(timeout: float = oauth.LOGIN_TIMEOUT) -> int:
+    attempt = oauth.Login(timeout=timeout).start()
+    print(
+        "Opening intervals.icu in your browser. If it doesn't open, visit:\n"
+        f"  {attempt.url}\nWaiting for you to approve access...",
+        file=sys.stderr,
+    )
+    attempt.wait()
+    if attempt.token is None:
+        print(f"error: not connected: {attempt.error}", file=sys.stderr)
+        return EXIT_API
+    print(f"Connected to intervals.icu as {attempt.token.who}.")
+    if find_api_key():
+        print(
+            "note: an API key is also set (INTERVALS_ICU_API_KEY or .env) and is used first.",
+            file=sys.stderr,
+        )
+    return EXIT_OK
+
+
+def logout() -> int:
+    store = oauth.default_store()
+    token = oauth.load_token(store)
+    if token is None:
+        print("Not signed in.")
+        return EXIT_OK
+    revoked = oauth.disconnect(token)
+    store.clear()
+    if revoked:
+        print("Signed out: intervals.icu revoked the access and it's removed from this computer.")
+    else:
+        print(
+            "Removed from this computer, but intervals.icu couldn't be reached to revoke it: "
+            "remove the app under intervals.icu -> Settings -> Apps."
+        )
     return EXIT_OK
 
 

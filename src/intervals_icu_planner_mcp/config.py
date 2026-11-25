@@ -1,10 +1,16 @@
-"""Find the intervals.icu API key. The key itself is never printed or logged."""
+"""Find the intervals.icu credentials: an API key, else a saved sign-in.
+
+Neither the key nor the token is ever printed or logged.
+"""
 
 from __future__ import annotations
 
 import os
 import sys
 from collections.abc import Callable, Mapping
+
+from . import oauth
+from .client import IntervalsClient
 
 ENV_VAR = "INTERVALS_ICU_API_KEY"
 LEGACY_ENV_VAR = "INTERVALS_API_KEY"  # used by 0.0.x; still read, with a warning
@@ -43,6 +49,7 @@ def find_api_key(
 
     ``INTERVALS_ICU_API_KEY`` wins. The old ``INTERVALS_API_KEY`` name is accepted
     as a fallback and triggers a deprecation warning (which never includes the key).
+    A ``${user_config...}`` placeholder (the Claude Desktop field left empty) is unset.
     """
     env = os.environ if env is None else env
     try:
@@ -52,8 +59,8 @@ def find_api_key(
         dotenv = {}
 
     for name in (ENV_VAR, LEGACY_ENV_VAR):
-        value = env.get(name) or dotenv.get(name)
-        if value:
+        value = (env.get(name) or dotenv.get(name) or "").strip()
+        if value and not value.startswith("${"):
             if name == LEGACY_ENV_VAR:
                 warn(f"warning: {LEGACY_ENV_VAR} is deprecated, rename it to {ENV_VAR}")
             return value
@@ -71,3 +78,17 @@ def find_plans_dir(env: Mapping[str, str] | None = None) -> str | None:
     if not value or value.startswith("${"):
         return None
     return os.path.expanduser(value)
+
+
+def make_client(
+    env: Mapping[str, str] | None = None,
+    store: oauth.TokenStore | None = None,
+) -> IntervalsClient | None:
+    """A client for the API key if there is one, else for the saved sign-in, else None."""
+    key = find_api_key(env)
+    if key:
+        return IntervalsClient.from_api_key(key)
+    token = oauth.load_token(store)
+    if token:
+        return IntervalsClient.from_token(token.access_token, oauth_client_id=oauth.CLIENT_ID)
+    return None

@@ -80,7 +80,7 @@ def test_push_offline_dry_run_needs_no_client(write_plan):
 
 
 def test_push_apply_requires_a_key(write_plan):
-    with pytest.raises(PlannerError, match=r"no intervals\.icu API key"):
+    with pytest.raises(PlannerError, match=r"not connected to intervals\.icu"):
         planner.push(write_plan(), client=None, dry_run=False)
 
 
@@ -343,7 +343,7 @@ def test_delete_custom_range(api, client):
 
 
 def test_delete_requires_a_key():
-    with pytest.raises(PlannerError, match="API key"):
+    with pytest.raises(PlannerError, match="not connected"):
         planner.delete("winter", client=None)
 
 
@@ -520,7 +520,7 @@ def test_move_refusals_change_nothing(api, client, write_plan, args, today, msg)
 def test_move_apply_needs_a_key_and_leaves_the_file(write_plan):
     path = write_plan()
     before = read(path)
-    with pytest.raises(PlannerError, match="API key"):
+    with pytest.raises(PlannerError, match="not connected"):
         planner.move(path, 1, "tue", "thu", client=None, dry_run=False, today=TODAY)
     assert read(path) == before
 
@@ -642,3 +642,104 @@ def test_library_folder_filter_and_empty(client):
         assert planner.library(client=client, folder="summer") == (
             "No workout folders matching 'summer' in the library."
         )
+
+
+# ------------------------------------------- which credential created an event
+
+APP = 2022
+
+
+def _calendar_with(plan, *, renamed: int, apps: dict[int, int | None]):
+    """The plan's first three events on the calendar, event 1 renamed; apps maps id -> app."""
+    cal = []
+    for i, e in enumerate(plan.events[:3], start=1):
+        ev = cal_event(
+            e.uid,
+            e.date.isoformat(),
+            id=i,
+            name=e.name,
+            category=e.category,
+            moving_time=e.workout.total_seconds if e.workout else None,
+            description=e.description,
+        )
+        if apps.get(i):
+            ev["oauth_client_id"] = apps[i]
+        cal.append(ev)
+    cal[renamed - 1]["name"] = "Old name"
+    return cal
+
+
+@pytest.fixture
+def update_route(api):
+    return api.router.put(url__regex=rf"{API}/events/\d+$").mock(
+        side_effect=lambda req: httpx.Response(200, json=json.loads(req.content))
+    )
+
+
+@pytest.fixture
+def oauth_client():
+    from intervals_icu_planner_mcp.client import IntervalsClient
+
+    c = IntervalsClient.from_token("tok-not-real", oauth_client_id=APP)
+    yield c
+    c.close()
+
+
+def test_signed_in_push_updates_api_key_events_by_id_not_by_upsert(
+    api, update_route, oauth_client, write_plan, make_plan
+):
+    # Events pushed earlier with an API key: an upsert from the app wouldn't match
+    # them and would create duplicates, so they're updated in place by id.
+    api.events.return_value = httpx.Response(
+        200, json=_calendar_with(make_plan(), renamed=1, apps={})
+    )
+    planner.push(write_plan(), client=oauth_client, dry_run=False)
+
+    assert update_route.call_count == 1
+    req = update_route.calls.last.request
+    assert req.url.path.endswith("/events/1")
+    assert json.loads(req.content)["external_id"] == "planner-test-w01-tue"
+    assert req.headers["Authorization"] == "Bearer tok-not-real"
+    sent = json.loads(api.upsert.calls.last.request.content)  # only the new ones
+    assert "planner-test-w01-tue" not in [e["external_id"] for e in sent]
+    assert len(sent) == 2
+
+
+def test_signed_in_push_upserts_its_own_events(
+    api, update_route, oauth_client, write_plan, make_plan
+):
+    api.events.return_value = httpx.Response(
+        200, json=_calendar_with(make_plan(), renamed=1, apps={1: APP, 2: APP, 3: APP})
+    )
+    planner.push(write_plan(), client=oauth_client, dry_run=False)
+    assert update_route.call_count == 0
+    sent = json.loads(api.upsert.calls.last.request.content)
+    assert sent[0]["external_id"] == "planner-test-w01-tue"
+
+
+def test_api_key_push_updates_app_events_by_id(api, update_route, client, write_plan, make_plan):
+    api.events.return_value = httpx.Response(
+        200, json=_calendar_with(make_plan(), renamed=2, apps={2: APP})
+    )
+    planner.push(write_plan(), client=client, dry_run=False)
+    assert update_route.call_count == 1
+    assert update_route.calls.last.request.url.path.endswith("/events/2")
+
+
+def test_unchanged_events_of_another_credential_are_left_alone(
+    api, update_route, oauth_client, write_plan, make_plan
+):
+    cal = _calendar_with(make_plan(), renamed=1, apps={})
+    cal[0]["name"] = make_plan().events[0].name  # nothing changed
+    api.events.return_value = httpx.Response(200, json=cal)
+    planner.push(write_plan(), client=oauth_client, dry_run=False)
+    assert update_route.call_count == 0
+
+
+def test_signed_in_dry_run_writes_nothing(api, update_route, oauth_client, write_plan, make_plan):
+    api.events.return_value = httpx.Response(
+        200, json=_calendar_with(make_plan(), renamed=1, apps={})
+    )
+    planner.push(write_plan(), client=oauth_client)
+    assert writes(api) == 0
+    assert update_route.call_count == 0

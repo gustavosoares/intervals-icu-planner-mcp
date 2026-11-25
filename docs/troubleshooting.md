@@ -23,11 +23,18 @@ exist, the local entry wins over the user one; `claude mcp list` shows which
 is in use, and `claude mcp remove intervals-icu-planner -s local` removes the
 local one.
 
-## "no intervals.icu API key"
+## "not connected to intervals.icu"
 
-The key is read from `INTERVALS_ICU_API_KEY`, then from a `.env` file in the
-working directory. Check that it's set in the environment the server runs in,
-which isn't necessarily your terminal's (see the Claude Desktop section above).
+Ask Claude to connect to intervals.icu, or run `intervals-icu-planner login`,
+and approve in the browser. If you use an API key instead, it's read from
+`INTERVALS_ICU_API_KEY`, then from a `.env` file in the working directory.
+Check that it's set in the environment the server runs in, which isn't
+necessarily your terminal's (see the Claude Desktop section above).
+
+## "your intervals.icu sign-in is no longer valid"
+
+The access was revoked (under intervals.icu **Settings → Apps**), or replaced
+by a newer sign-in elsewhere. Connect again.
 
 ## A workout isn't in Zwift, MyWhoosh or Garmin
 

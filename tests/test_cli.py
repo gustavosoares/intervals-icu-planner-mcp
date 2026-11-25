@@ -25,7 +25,7 @@ def test_push_with_key_dry_run_reads_but_never_writes(monkeypatch, capsys):
 
 def test_apply_without_key(capsys):
     assert main(["push", str(EXAMPLE), "--apply"]) == 2
-    assert "no intervals.icu API key" in capsys.readouterr().err
+    assert "not connected to intervals.icu" in capsys.readouterr().err
 
 
 def test_invalid_plan_exit_code(capsys):

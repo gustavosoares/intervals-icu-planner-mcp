@@ -1,19 +1,20 @@
-"""The MCP server: five tools over stdio, thin wrappers around :mod:`.planner`.
+"""The MCP server: tools over stdio, thin wrappers around :mod:`.planner`.
 
 Run it with ``uvx intervals-icu-planner-mcp`` (or ``intervals-icu-planner-mcp``).
 """
 
 from __future__ import annotations
 
+import threading
 from collections.abc import Callable
 
 from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 from mcp.types import ToolAnnotations
 
-from . import __version__, guide, planner
+from . import __version__, guide, oauth, planner
 from .client import ApiError, IntervalsClient
-from .config import find_api_key, find_plans_dir
+from .config import find_api_key, find_plans_dir, make_client
 from .plan import PlanError
 
 INSTRUCTIONS = """\
@@ -29,6 +30,9 @@ source of truth.
 
 To write a new plan or change a plan's workouts, call plan_guide first: it has
 the plan.yaml format, the .zwo rules and the steps to follow.
+
+If a tool says it's not connected to intervals.icu, call connect: the user
+signs in and approves access in their browser.
 """
 
 PLANS_DIR = find_plans_dir()
@@ -46,8 +50,7 @@ mcp = MCPServer(
 
 
 def _client() -> IntervalsClient | None:
-    key = find_api_key()
-    return IntervalsClient.from_api_key(key) if key else None
+    return make_client()
 
 
 def _run(op: Callable[[IntervalsClient | None], str]) -> str:
@@ -258,6 +261,49 @@ def list_library(folder: str | None = None) -> str:
         folder: Optional text; only folders whose name contains it.
     """
     return _run(lambda c: planner.library(client=c, folder=folder))
+
+
+CONNECT_WAIT = 45.0  # seconds connect waits for the browser before answering
+_login: oauth.Login | None = None
+_login_lock = threading.Lock()
+
+
+@mcp.tool(
+    annotations=ToolAnnotations(
+        read_only_hint=False, destructive_hint=False, idempotent_hint=True, open_world_hint=True
+    )
+)
+def connect(again: bool = False) -> str:
+    """Connect to the user's intervals.icu account: opens intervals.icu in their browser,
+    where they sign in and approve access. Call this when another tool says it's not
+    connected. No API key is needed; the access token is kept in the system keychain.
+
+    Args:
+        again: true = sign in again even if already connected (e.g. another account).
+    """
+    global _login
+    if find_api_key():
+        return "Already connected with an intervals.icu API key (INTERVALS_ICU_API_KEY)."
+    current = oauth.load_token()
+    if current and not again:
+        return f"Already connected to intervals.icu as {current.who}."
+    with _login_lock:
+        if _login is None or _login.finished:
+            try:
+                _login = oauth.Login().start()
+            except OSError as e:
+                raise ToolError(f"could not start the sign-in ({type(e).__name__})") from None
+        login = _login
+    login.wait(CONNECT_WAIT)
+    if login.token:
+        return f"Connected to intervals.icu as {login.token.who}."
+    if login.error:
+        raise ToolError(f"not connected: {login.error}. Call connect to try again.")
+    return (
+        "Waiting for the user to approve access in their browser. If no intervals.icu "
+        f"page opened, ask them to open this link:\n{login.url}\n"
+        "After they approve, call connect again to confirm."
+    )
 
 
 @mcp.tool(annotations=ToolAnnotations(read_only_hint=True, open_world_hint=False))
