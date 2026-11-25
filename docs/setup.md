@@ -47,7 +47,7 @@ Config):
       "command": "/bin/sh",
       "args": [
         "-c",
-        "INTERVALS_ICU_API_KEY=$(security find-generic-password -w -s INTERVALS_ICU_API_KEY) exec /opt/homebrew/bin/uvx --from git+https://github.com/gustavosoares/intervals-icu-planner-mcp intervals-icu-planner-mcp"
+        "INTERVALS_ICU_API_KEY=$(security find-generic-password -w -s INTERVALS_ICU_API_KEY) exec /opt/homebrew/bin/uvx intervals-icu-planner-mcp"
       ]
     }
   }
@@ -64,7 +64,7 @@ The same wrapper works in Claude Code:
 
 ```sh
 claude mcp add -s user intervals-icu-planner -- /bin/sh -c \
-  'INTERVALS_ICU_API_KEY=$(security find-generic-password -w -s INTERVALS_ICU_API_KEY) exec uvx --from git+https://github.com/gustavosoares/intervals-icu-planner-mcp intervals-icu-planner-mcp'
+  'INTERVALS_ICU_API_KEY=$(security find-generic-password -w -s INTERVALS_ICU_API_KEY) exec uvx intervals-icu-planner-mcp'
 ```
 
 ### Check or remove the stored key
@@ -84,10 +84,7 @@ plain text in the config file; on a Mac, prefer the Keychain version above.
   "mcpServers": {
     "intervals-icu-planner": {
       "command": "uvx",
-      "args": [
-        "--from", "git+https://github.com/gustavosoares/intervals-icu-planner-mcp",
-        "intervals-icu-planner-mcp"
-      ],
+      "args": ["intervals-icu-planner-mcp"],
       "env": { "INTERVALS_ICU_API_KEY": "your-key-here" }
     }
   }
@@ -98,15 +95,23 @@ Claude Code:
 
 ```sh
 claude mcp add -s user intervals-icu-planner -e INTERVALS_ICU_API_KEY=your-key-here -- \
-  uvx --from git+https://github.com/gustavosoares/intervals-icu-planner-mcp intervals-icu-planner-mcp
+  uvx intervals-icu-planner-mcp
 ```
 
-Once the package is on PyPI this becomes `uvx intervals-icu-planner-mcp`.
+## Upgrading
+
+`uvx` caches the version it installed first. To move to a new release, run
+`uvx intervals-icu-planner-mcp@latest` once (or `uv cache clean
+intervals-icu-planner-mcp`), then restart Claude. To pin a version, use
+`intervals-icu-planner-mcp@0.1.0` in the config instead.
+
+To try unreleased changes from GitHub, use
+`uvx --from git+https://github.com/gustavosoares/intervals-icu-planner-mcp intervals-icu-planner-mcp`.
 
 ## The CLI
 
 ```sh
-pip install git+https://github.com/gustavosoares/intervals-icu-planner-mcp
+pip install intervals-icu-planner-mcp      # or: uv tool install intervals-icu-planner-mcp
 export INTERVALS_ICU_API_KEY=your-key-here      # or put it in .env
 intervals-icu-planner push examples/winter-base-12wk/plan.yaml
 ```

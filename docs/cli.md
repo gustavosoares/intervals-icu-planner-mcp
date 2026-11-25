@@ -5,7 +5,7 @@
 The same core works without MCP, from the command line:
 
 ```sh
-pip install git+https://github.com/gustavosoares/intervals-icu-planner-mcp
+pip install intervals-icu-planner-mcp      # or: uv tool install intervals-icu-planner-mcp
 export INTERVALS_ICU_API_KEY=your-key-here      # or put it in .env
 
 intervals-icu-planner push plan.yaml                       # dry run: prints the diff
