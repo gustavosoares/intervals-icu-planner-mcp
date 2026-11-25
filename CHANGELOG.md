@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-25
+
 ### Added
 - `plan_guide` / `guide`: how to write a plan, for Claude: the plan.yaml
   format and JSON Schema, the .zwo rules, a tested example of each, and the
@@ -81,5 +83,6 @@ First release on PyPI.
   load is realistic.
 - `*.zip` is git-ignored, so exported workout archives aren't committed by mistake.
 
-[Unreleased]: https://github.com/gustavosoares/intervals-icu-planner-mcp/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/gustavosoares/intervals-icu-planner-mcp/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/gustavosoares/intervals-icu-planner-mcp/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/gustavosoares/intervals-icu-planner-mcp/releases/tag/v0.1.0
