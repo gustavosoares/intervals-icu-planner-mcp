@@ -32,6 +32,7 @@ def test_manifest_lists_every_tool():
 def test_api_key_is_sensitive_and_passed_in_the_env_var_the_server_reads():
     m = manifest()
     assert m["user_config"]["api_key"]["sensitive"] is True
+    assert m["user_config"]["api_key"]["required"] is False  # signing in works without one
     env = m["server"]["mcp_config"]["env"]
     assert env[config.ENV_VAR] == "${user_config.api_key}"
 
@@ -44,6 +45,11 @@ def test_optional_plans_folder_is_passed_in_the_env_var_the_server_reads():
     env = m["server"]["mcp_config"]["env"]
     assert env[config.PLANS_DIR_ENV_VAR] == "${user_config.plans_dir}"
     assert set(env) == {config.ENV_VAR, config.PLANS_DIR_ENV_VAR}
+
+
+def test_icon_is_bundled():
+    icon = BUNDLE / manifest()["icon"]
+    assert icon.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
 
 
 def test_entry_point_runs_the_server():

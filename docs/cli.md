@@ -8,6 +8,8 @@ The same core works without MCP, from the command line:
 pip install intervals-icu-planner-mcp      # or: uv tool install intervals-icu-planner-mcp
 export INTERVALS_ICU_API_KEY=your-key-here      # or put it in .env
 
+intervals-icu-planner login                                # sign in with intervals.icu in the browser
+intervals-icu-planner logout                               # revoke and forget the sign-in
 intervals-icu-planner push plan.yaml                       # dry run: prints the diff
 intervals-icu-planner push plan.yaml --start 2027-01-04    # shift the plan
 intervals-icu-planner push plan.yaml --apply               # write it

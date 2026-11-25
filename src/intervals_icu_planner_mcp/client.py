@@ -1,8 +1,8 @@
 """A small intervals.icu API client.
 
 It knows nothing about MCP, plans or uids: it sends requests and returns JSON.
-Authentication is any ``httpx.Auth``, so OAuth can be added later without
-touching the callers; :meth:`IntervalsClient.from_api_key` covers the API-key case.
+Authentication is any ``httpx.Auth``: :meth:`IntervalsClient.from_api_key` for
+a personal API key, :meth:`IntervalsClient.from_token` for an OAuth sign-in.
 """
 
 from __future__ import annotations
@@ -28,6 +28,25 @@ class ApiError(Exception):
         super().__init__(message)
 
 
+class BearerAuth(httpx.Auth):
+    def __init__(self, token: str):
+        self._header = f"Bearer {token}"
+
+    def __repr__(self) -> str:
+        return "BearerAuth(***)"
+
+    def auth_flow(self, request: httpx.Request) -> Any:
+        request.headers["Authorization"] = self._header
+        yield request
+
+
+API_KEY_HINT = "check your intervals.icu API key"
+SIGN_IN_HINT = (
+    "your intervals.icu sign-in is no longer valid: connect again "
+    "(the connect tool, or `intervals-icu-planner login`)"
+)
+
+
 class IntervalsClient:
     def __init__(
         self,
@@ -37,7 +56,13 @@ class IntervalsClient:
         base_url: str = BASE_URL,
         timeout: float = 30.0,
         transport: httpx.BaseTransport | None = None,
+        oauth_client_id: int | None = None,
+        auth_hint: str = API_KEY_HINT,
     ):
+        # Events created through an OAuth app carry its id; bulk upserts only match
+        # events created by the same app (None: a personal API key).
+        self.oauth_client_id = oauth_client_id
+        self._auth_hint = auth_hint
         # athlete "0" means "the athlete who owns the credentials".
         self._http = httpx.Client(
             base_url=f"{base_url.rstrip('/')}/athlete/{athlete_id}",
@@ -50,6 +75,17 @@ class IntervalsClient:
     @classmethod
     def from_api_key(cls, api_key: str, **kwargs: Any) -> IntervalsClient:
         return cls(httpx.BasicAuth("API_KEY", api_key), **kwargs)
+
+    @classmethod
+    def from_token(
+        cls, access_token: str, *, oauth_client_id: int, **kwargs: Any
+    ) -> IntervalsClient:
+        return cls(
+            BearerAuth(access_token),
+            oauth_client_id=oauth_client_id,
+            auth_hint=SIGN_IN_HINT,
+            **kwargs,
+        )
 
     def __repr__(self) -> str:
         return f"IntervalsClient(base_url={str(self._http.base_url)!r})"
@@ -81,7 +117,7 @@ class IntervalsClient:
             raise ApiError(f"cannot reach intervals.icu ({type(e).__name__})") from None
         if resp.status_code in (401, 403):
             raise ApiError(
-                f"HTTP {resp.status_code} from {method} {path}: check your intervals.icu API key",
+                f"HTTP {resp.status_code} from {method} {path}: {self._auth_hint}",
                 resp.status_code,
             )
         if resp.is_error:
@@ -107,6 +143,10 @@ class IntervalsClient:
         """Create events, updating any with a matching external_id."""
         res = self._request("POST", "/events/bulk", {"upsert": "true"}, list(events))
         return res or []
+
+    def update_event(self, event_id: int, event: JSON) -> JSON:
+        """Update one event by id (works whichever app or key created it)."""
+        return self._request("PUT", f"/events/{int(event_id)}", body=event) or {}
 
     def delete_events(self, ids: Sequence[int]) -> int:
         """Delete events by id. Returns how many intervals.icu deleted."""

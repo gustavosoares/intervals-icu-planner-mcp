@@ -30,7 +30,7 @@ aggregate `ci-checks` job name, so don't rename it.
 
 ```
 src/intervals_icu_planner_mcp/
-  client.py    httpx client. No MCP or plan imports; auth is any httpx.Auth (OAuth later)
+  client.py    httpx client. No MCP or plan imports; API key (Basic) or OAuth token (Bearer)
   zwo.py       .zwo parse + validation
   plan.py      pydantic models (source of truth for the JSON Schema), uid helpers, expansion
   diff.py      plan vs calendar diff + rendering
@@ -39,13 +39,15 @@ src/intervals_icu_planner_mcp/
   guide.py     plan_guide text for models: built from plan.py's schema and zwo.py's rules, examples tested
   server.py    MCP tools (thin wrappers over planner)
   cli.py       argparse front end (thin wrapper over planner)
-  config.py    API key lookup
+  config.py    credentials: API key (env/.env), else the saved sign-in; make_client()
+  oauth.py     sign in with intervals.icu: PKCE public client, localhost callback, keychain token
 schemas/plan.schema.json        generated, committed; a test fails if it drifts
 docs/                           user docs; README stays short and links here
 docs/images/                    screenshots: no personal data (crop avatars, weight, HR, fitness numbers)
 examples/winter-base-12wk/      public example plan + workouts
 mcpb/                           Claude Desktop extension: manifest + a pyproject that installs the PyPI release
 scripts/build_mcpb.py           stamps the version into mcpb/ and packs dist/intervals-icu-planner-<v>.mcpb
+scripts/make_icon.py            draws mcpb/icon.png and docs/images/icon.png (uv run --with pillow)
 ```
 
 Keep the layering: new behaviour goes in `planner.py`, or lower in the
@@ -69,10 +71,12 @@ stack, never only in `server.py` or `cli.py`.
    (start is a Monday, templates exist, workout names have no path parts).
    Each `.zwo`: no DOCTYPE/ENTITY, known segments only, durations > 0, power
    ratios in (0, 3], total < 6 h. Report every error together.
-4. **The API key is never logged.** It comes from `INTERVALS_ICU_API_KEY`,
-   then `.env`, with the legacy `INTERVALS_API_KEY` accepted plus a warning.
-   It never goes in errors, reprs or output. Tests use `FAKE_KEY` and check
-   it doesn't leak.
+4. **Credentials are never logged.** The API key comes from
+   `INTERVALS_ICU_API_KEY`, then `.env`, with the legacy `INTERVALS_API_KEY`
+   accepted plus a warning; otherwise the saved OAuth token is used
+   (`config.make_client`). Neither goes in errors, reprs or output, nor does
+   an authorization code. Tests use `FAKE_KEY` / fake tokens and check they
+   don't leak, and the autouse fixture swaps the keychain for a temp file.
 
 5. **Optional plans folder.** With `INTERVALS_ICU_PLANS_DIR` set
    (`config.find_plans_dir`), `plan.ensure_inside`/`is_inside` refuse a plan
@@ -113,6 +117,27 @@ stack, never only in `server.py` or `cli.py`.
   Useful fields: `moving_time`, `distance` (m), `icu_training_load`,
   `icu_average_watts`, `icu_weighted_avg_watts`, `icu_intensity` (a
   percentage, 86.5 = IF 0.865), `average_heartrate`.
+
+## OAuth (sign in with intervals.icu)
+
+- App **client id 2022**, registered as a **public client** with **Require
+  PKCE**, so there's no secret. Redirect URI `http://localhost/callback` is
+  registered; intervals.icu ignores the port of a localhost redirect, and
+  public clients must register their exact redirect URIs.
+- Authorize: `https://intervals.icu/oauth/authorize`, scopes comma-separated.
+  Token: form POST to `https://intervals.icu/api/oauth/token` with
+  `client_id`, `code`, `code_verifier`. The response has `access_token`,
+  `scope`, `athlete {id, name}`, and **no expiry or refresh token**. A new
+  sign-in replaces the old token. Revoke: `DELETE /api/v1/disconnect-app`.
+- **Upsert ownership:** `upsert=true` only matches events created by the same
+  OAuth app, and events carry `oauth_client_id`. `planner._sync` sends an
+  "updated" event through the bulk upsert only if it was created by the same
+  credential (`Change.existing_app == client.oauth_client_id`; None = API
+  key), and updates the rest with `PUT /events/{id}`. Otherwise switching
+  between a key and the sign-in would duplicate events.
+- The MCP `connect` tool starts the sign-in in a background thread and waits
+  up to 45 s; if the user is slower, it returns the link and the model calls
+  it again.
 
 ## MCP SDK notes
 

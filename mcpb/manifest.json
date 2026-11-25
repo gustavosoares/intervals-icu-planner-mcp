@@ -5,6 +5,7 @@
   "version": "0.0.0",
   "description": "Plan a whole training block with Claude and put it on your intervals.icu calendar, safely.",
   "long_description": "Push, inspect, move and remove whole training plans (a plan.yaml plus .zwo workouts) on your intervals.icu calendar, and read your fitness and completed rides. Every write is a dry run first and only touches events the plan created.",
+  "icon": "icon.png",
   "author": {
     "name": "Gustavo Soares Souza",
     "url": "https://github.com/gustavosoares"
@@ -29,10 +30,10 @@
   "user_config": {
     "api_key": {
       "type": "string",
-      "title": "intervals.icu API key",
-      "description": "intervals.icu → Settings → Developer Settings → API key. Stored in your system keychain.",
+      "title": "intervals.icu API key (optional)",
+      "description": "Leave empty and ask Claude to connect to intervals.icu: you sign in in your browser. Or paste a key from intervals.icu → Settings → Developer Settings. Stored in your system keychain.",
       "sensitive": true,
-      "required": true
+      "required": false
     },
     "plans_dir": {
       "type": "directory",
@@ -50,7 +51,8 @@
     {"name": "move_workout", "description": "Move one session to another day in plan.yaml and on the calendar (dry run by default)"},
     {"name": "shift_plan", "description": "Push the rest of a plan back by N weeks (dry run by default)"},
     {"name": "list_library", "description": "Your intervals.icu workout library"},
-    {"name": "plan_guide", "description": "How to write a plan: the plan.yaml format, .zwo rules and examples"}
+    {"name": "plan_guide", "description": "How to write a plan: the plan.yaml format, .zwo rules and examples"},
+    {"name": "connect", "description": "Sign in with intervals.icu in your browser (instead of an API key)"}
   ],
   "compatibility": {
     "platforms": ["darwin", "win32", "linux"],

@@ -65,7 +65,8 @@ def parse_range(oldest: str, newest: str) -> tuple[dt.date, dt.date]:
 def _require(client: IntervalsClient | None) -> IntervalsClient:
     if client is None:
         raise PlannerError(
-            "no intervals.icu API key: set INTERVALS_ICU_API_KEY or add it to a .env file "
+            "not connected to intervals.icu: sign in with the connect tool (or "
+            "`intervals-icu-planner login`), or set INTERVALS_ICU_API_KEY "
             "(intervals.icu -> Settings -> Developer Settings)"
         )
     return client
@@ -208,9 +209,22 @@ def _sync(
         return render(applied=False)
 
     assert client is not None
-    to_send = diff.to_send
-    if to_send:
-        client.upsert_events([event_payload(e, plan.type) for e in to_send])
+    # A bulk upsert only updates events created by the same OAuth app (or, for an
+    # API key, by no app); anything else would be duplicated. So an event made by
+    # the other kind of credential is updated by id instead.
+    bulk, by_id = [], []
+    for c in diff.changes:
+        if c.status == "new" or (
+            c.status == "updated" and c.existing_app == client.oauth_client_id
+        ):
+            bulk.append(c.event)
+        elif c.status == "updated":
+            by_id.append(c)
+    if bulk:
+        client.upsert_events([event_payload(e, plan.type) for e in bulk])
+    for c in by_id:
+        assert c.existing_id is not None and owns_uid(plan.id, c.event.uid)
+        client.update_event(c.existing_id, event_payload(c.event, plan.type))
     deleted = 0
     doomed = diff.prunable(now) if prune else []
     if doomed:  # after the upsert: a failed upsert raises before anything is deleted

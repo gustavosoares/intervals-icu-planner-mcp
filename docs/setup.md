@@ -2,7 +2,34 @@
 
 [← Back to README](../README.md)
 
-## Get an API key
+## Sign in with intervals.icu (recommended)
+
+No API key needed. Ask Claude to **"connect to intervals.icu"** (the `connect`
+tool), or run:
+
+```sh
+intervals-icu-planner login
+```
+
+intervals.icu opens in your browser; sign in and click **OK**. The access
+token is saved in your system keychain (macOS Keychain, Windows Credential
+Manager or the Linux Secret Service; on a system without one, in
+`~/.config/intervals-icu-planner/token.json`, readable only by you). It
+doesn't expire, so you sign in once.
+
+It can read and write your calendar (planned workouts and notes) and read
+your workout library, fitness and activities. To sign out, run
+`intervals-icu-planner logout`, which revokes the access and removes the
+token, or remove **intervals-icu-planner-mcp** under intervals.icu
+**Settings → Apps**.
+
+If an API key is also set, the key is used.
+
+> **Switching from an API key?** Plans you pushed with an API key keep
+> working: the planner updates their events in place either way, without
+> duplicates.
+
+## Or use an API key
 
 intervals.icu → **Settings** → **Developer Settings** → **API key**.
 

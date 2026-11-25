@@ -6,6 +6,19 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- Sign in with intervals.icu: no API key needed. Ask Claude to connect (the
+  new `connect` tool) or run `intervals-icu-planner login`, then approve in
+  the browser. The token is kept in the system keychain;
+  `intervals-icu-planner logout` revokes it. An API key, if set, still wins.
+- The Claude Desktop extension's API key field is now optional, and it has
+  an icon.
+
+### Changed
+- Pushes update events created with the other kind of credential (an API key
+  vs. the sign-in) by id, so switching between them never duplicates a plan's
+  events.
+
 ## [0.3.0] - 2026-11-25
 
 ### Added

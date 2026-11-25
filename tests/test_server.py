@@ -30,6 +30,7 @@ def test_tools_and_parameters():
         "shift_plan",
         "list_library",
         "plan_guide",
+        "connect",
     }
     props = {n: tool.input_schema["properties"] for n, tool in t.items()}
     assert set(props["push_plan"]) == {"plan_yaml", "start_date", "dry_run", "prune"}
@@ -51,6 +52,7 @@ def test_tools_and_parameters():
     assert props["shift_plan"]["weeks"]["default"] == 1
     assert set(props["list_library"]) == {"folder"}
     assert set(props["plan_guide"]) == set()
+    assert set(props["connect"]) == {"again"}
 
 
 def test_write_tools_default_to_dry_run():
@@ -93,7 +95,7 @@ def test_push_plan_offline_dry_run():
 def test_expected_errors_reach_the_model():
     with pytest.raises(ToolError, match="must be a Monday"):
         call("push_plan", plan_yaml=str(EXAMPLE), start_date="2026-12-01")
-    with pytest.raises(ToolError, match=r"no intervals\.icu API key"):
+    with pytest.raises(ToolError, match=r"not connected to intervals\.icu"):
         call("delete_plan", plan_id="winterbase", dry_run=False)
 
 

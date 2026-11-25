@@ -7,6 +7,7 @@ from typing import Any
 
 import pytest
 
+from intervals_icu_planner_mcp import oauth
 from intervals_icu_planner_mcp.client import IntervalsClient
 from intervals_icu_planner_mcp.plan import build_plan
 
@@ -28,7 +29,10 @@ ZWO = """<?xml version="1.0" encoding="UTF-8"?>
 
 @pytest.fixture(autouse=True)
 def _no_ambient_key(monkeypatch, tmp_path):
-    """Tests never pick up a real key (or plans folder) from the environment or a .env file."""
+    """Tests never pick up a real key, sign-in or plans folder from the environment,
+    a .env file or the system keychain."""
+    store = oauth.FileStore(tmp_path / "token-store" / "token.json")
+    monkeypatch.setattr(oauth, "default_store", lambda: store)
     monkeypatch.delenv("INTERVALS_ICU_API_KEY", raising=False)
     monkeypatch.delenv("INTERVALS_API_KEY", raising=False)
     monkeypatch.delenv("INTERVALS_ICU_PLANS_DIR", raising=False)

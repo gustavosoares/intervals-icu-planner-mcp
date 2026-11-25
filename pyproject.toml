@@ -15,6 +15,7 @@ dependencies = [
     "pydantic>=2.7",
     "PyYAML>=6.0",
     "ruamel.yaml>=0.18",
+    "keyring>=24",
 ]
 keywords = ["intervals.icu", "mcp", "zwo", "zwift", "cycling", "training-plan"]
 classifiers = [
