@@ -96,3 +96,11 @@ python -m venv .venv && .venv/bin/pip install -e ".[dev]"
 After changing the plan models, regenerate the schema with
 `intervals-icu-planner schema > schemas/plan.schema.json` (a test fails if it
 drifts). See [CONTRIBUTING.md](../CONTRIBUTING.md) for the ground rules.
+
+## Versions and releases
+
+The version comes from the `v*` git tag (hatch-vcs), not from a file, and
+merging a PR never publishes anything. A release is a manual, approved run of
+the `publish` workflow with the version as input, for example
+`gh workflow run publish.yml --ref main -f version=0.2.0 -f target=pypi`.
+The steps are in [CONTRIBUTING.md → Releasing](../CONTRIBUTING.md#releasing-maintainer-only).

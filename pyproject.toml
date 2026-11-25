@@ -1,12 +1,11 @@
 [build-system]
-requires = ["hatchling>=1.24", "hatch-fancy-pypi-readme>=24.1"]
+requires = ["hatchling>=1.24", "hatch-vcs>=0.4", "hatch-fancy-pypi-readme>=24.1"]
 build-backend = "hatchling.build"
 
 [project]
 name = "intervals-icu-planner-mcp"
-version = "0.1.0"
 description = "MCP server and CLI to push, inspect and remove whole training plans on intervals.icu, safely"
-dynamic = ["readme"]
+dynamic = ["version", "readme"]
 license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.10"
@@ -48,6 +47,14 @@ intervals-icu-planner = "intervals_icu_planner_mcp.cli:main"
 Homepage = "https://github.com/gustavosoares/intervals-icu-planner-mcp"
 Issues = "https://github.com/gustavosoares/intervals-icu-planner-mcp/issues"
 Changelog = "https://github.com/gustavosoares/intervals-icu-planner-mcp/blob/main/CHANGELOG.md"
+
+# The version comes from the git tag (v0.2.0 -> 0.2.0). The publish workflow
+# sets it explicitly; untagged dev builds get 0.2.1.devN+g<hash>.
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.version.raw-options]
+fallback_version = "0.0.0"  # e.g. a shallow clone with no tags
 
 # PyPI can't resolve the README's relative links and images: point them at GitHub.
 [tool.hatch.metadata.hooks.fancy-pypi-readme]

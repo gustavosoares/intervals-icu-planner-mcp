@@ -158,8 +158,14 @@ stack, never only in `server.py` or `cli.py`.
 - `claude mcp add` without `-s user` registers the server **only for the
   current directory**. A local-scope entry overrides a user-scope one.
 - The package is on PyPI (`uvx intervals-icu-planner-mcp`), released by the
-  manual `publish` workflow (see CONTRIBUTING). To run an unreleased branch,
-  use `uvx --from git+https://github.com/gustavosoares/intervals-icu-planner-mcp@<branch> intervals-icu-planner-mcp`.
+  manual `publish` workflow (see CONTRIBUTING → Releasing). The version comes
+  from the `v*` git tag via hatch-vcs, so never add a `version` to
+  pyproject.toml or hard-code `__version__`. Feature PRs add to the
+  changelog's Unreleased section; they don't pick a version number.
+  Releases run through the `/release-pypi` skill (`.claude/skills/`), which
+  only the maintainer starts. Never approve a deployment or merge for them.
+- To run an unreleased branch, use
+  `uvx --from git+https://github.com/gustavosoares/intervals-icu-planner-mcp@<branch> intervals-icu-planner-mcp`.
   On `main` before the MCP PR merged, that entry point was the old CLI.
 
 ## Conventions
