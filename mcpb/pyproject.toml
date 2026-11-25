@@ -1,0 +1,8 @@
+# The Claude Desktop extension's environment, not the package itself: Claude
+# Desktop runs `uv run` here, which installs the released package from PyPI.
+# scripts/build_mcpb.py pins the dependency to the version being released.
+[project]
+name = "intervals-icu-planner-mcpb"
+version = "0.0.0"
+requires-python = ">=3.10"
+dependencies = ["intervals-icu-planner-mcp"]
