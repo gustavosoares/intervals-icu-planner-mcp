@@ -21,7 +21,7 @@ CI runs the same checks on Python 3.10 to 3.13.
 
 ## Ground rules
 
-- **Keep the safety rules intact** (see "Safety design" in the README). Write
+- **Keep the safety rules intact** (see [docs/safety.md](docs/safety.md)). Write
   operations default to a dry run, and the code only ever modifies events
   whose uid fully matches `planner-<plan_id>-w<NN>-<day>`. A change to either
   of these needs tests that show it still holds.

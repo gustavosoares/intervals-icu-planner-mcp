@@ -40,6 +40,8 @@ src/intervals_icu_planner_mcp/
   cli.py       argparse front end (thin wrapper over planner)
   config.py    API key lookup
 schemas/plan.schema.json        generated, committed; a test fails if it drifts
+docs/                           user docs; README stays short and links here
+docs/images/                    screenshots: no personal data (crop avatars, weight, HR, fitness numbers)
 examples/winter-base-12wk/      public example plan + workouts
 ```
 

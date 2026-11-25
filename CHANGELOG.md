@@ -17,6 +17,10 @@ All notable changes to this project are documented here. The format follows
   never pruned, and deletion runs only after the upsert succeeds.
 
 ### Changed
+- README rewritten for riders, not only developers: a calendar screenshot,
+  a plain-language "what it's for", and example prompts to paste into Claude.
+  The detailed reference moved to `docs/` (setup, plan reference, safety,
+  CLI, training apps, how it works), and there's a new troubleshooting page.
 - Pushes look for the plan's existing events one year back and two years
   ahead (or the plan's own range, if wider), so leftovers of a shorter or
   shifted plan are found, and moved events show as updated, not new.
