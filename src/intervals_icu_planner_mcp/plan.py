@@ -241,8 +241,24 @@ def _parse_start(value: Any) -> dt.date:
     return dt.date.fromisoformat(str(value).strip())
 
 
-def load_plan(path: str, start: str | dt.date | None = None) -> Plan:
-    """Read, validate and expand ``path``. ``start`` overrides the plan's start Monday."""
+def is_inside(path: str, root: str) -> bool:
+    """True if ``path`` is ``root`` or below it, after following symlinks."""
+    real, real_root = os.path.realpath(path), os.path.realpath(root)
+    return os.path.commonpath([real, real_root]) == real_root
+
+
+def ensure_inside(path: str, root: str | None) -> None:
+    """Refuse a plan file outside the plans folder, before anything reads it."""
+    if root is not None and not is_inside(path, root):
+        raise PlanError([f"{path}: outside the plans folder ({root}); move the plan there"])
+
+
+def load_plan(path: str, start: str | dt.date | None = None, root: str | None = None) -> Plan:
+    """Read, validate and expand ``path``. ``start`` overrides the plan's start Monday.
+
+    With ``root`` (the plans folder), the plan and its workouts must be inside it.
+    """
+    ensure_inside(path, root)
     try:
         with open(path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
@@ -252,11 +268,20 @@ def load_plan(path: str, start: str | dt.date | None = None) -> Plan:
         raise PlanError([f"{path}: invalid YAML: {e}"]) from None
     if not isinstance(data, dict):
         raise PlanError([f"{path}: top level must be a mapping"])
-    return build_plan(data, base_dir=os.path.dirname(os.path.abspath(path)), start=start)
+    base_dir = os.path.dirname(os.path.abspath(path))
+    return build_plan(data, base_dir=base_dir, start=start, root=root)
 
 
-def build_plan(data: dict[str, Any], base_dir: str, start: str | dt.date | None = None) -> Plan:
-    """Validate parsed YAML and expand it into dated events."""
+def build_plan(
+    data: dict[str, Any],
+    base_dir: str,
+    start: str | dt.date | None = None,
+    root: str | None = None,
+) -> Plan:
+    """Validate parsed YAML and expand it into dated events.
+
+    With ``root``, workouts outside that folder (also through symlinks) are errors.
+    """
     try:
         pf = PlanFile.model_validate(data)
     except ValidationError as e:
@@ -277,11 +302,14 @@ def build_plan(data: dict[str, Any], base_dir: str, start: str | dt.date | None 
 
     def resolve(filename: str, where: str) -> Workout | None:
         if filename not in cache:
+            path = os.path.join(workouts_dir, filename)
             if os.path.basename(filename) != filename:
                 cache[filename] = "must be a file name inside workouts_dir, not a path"
+            elif root is not None and not is_inside(path, root):
+                cache[filename] = f"outside the plans folder ({root})"
             else:
                 try:
-                    cache[filename] = parse_zwo(os.path.join(workouts_dir, filename))
+                    cache[filename] = parse_zwo(path)
                 except ZwoError as e:
                     cache[filename] = "; ".join(e.errors)
         result = cache[filename]

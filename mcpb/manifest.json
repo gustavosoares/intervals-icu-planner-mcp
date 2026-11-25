@@ -21,7 +21,8 @@
       "command": "uv",
       "args": ["run", "--directory", "${__dirname}", "src/server.py"],
       "env": {
-        "INTERVALS_ICU_API_KEY": "${user_config.api_key}"
+        "INTERVALS_ICU_API_KEY": "${user_config.api_key}",
+        "INTERVALS_ICU_PLANS_DIR": "${user_config.plans_dir}"
       }
     }
   },
@@ -32,6 +33,12 @@
       "description": "intervals.icu → Settings → Developer Settings → API key. Stored in your system keychain.",
       "sensitive": true,
       "required": true
+    },
+    "plans_dir": {
+      "type": "directory",
+      "title": "Plans folder (optional)",
+      "description": "If set, the planner only reads and edits plans and workouts inside this folder. Leave empty to allow any folder.",
+      "required": false
     }
   },
   "tools": [

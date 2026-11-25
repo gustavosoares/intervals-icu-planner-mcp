@@ -224,3 +224,6 @@ __marimo__/
 
 # Archives (e.g. workout exports dropped into the repo by mistake)
 *.zip
+
+# macOS
+.DS_Store

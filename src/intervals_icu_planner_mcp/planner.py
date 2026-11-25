@@ -23,7 +23,16 @@ from . import edit
 from .client import JSON, ApiError, IntervalsClient
 from .diff import compute_diff, event_date, event_uid, render_diff
 from .edit import Edited, EditError
-from .plan import DAYS, Plan, PlannedEvent, build_plan, load_plan, owns_uid, valid_plan_id
+from .plan import (
+    DAYS,
+    Plan,
+    PlannedEvent,
+    build_plan,
+    ensure_inside,
+    load_plan,
+    owns_uid,
+    valid_plan_id,
+)
 
 DEFAULT_LOOKBACK = dt.timedelta(days=365)
 DEFAULT_LOOKAHEAD = dt.timedelta(days=730)
@@ -142,6 +151,7 @@ def push(
     start: str | None = None,
     dry_run: bool = True,
     prune: bool = False,
+    plans_dir: str | None = None,
     today: Callable[[], dt.date] = dt.date.today,
     apply_hint: str = "dry_run=false",
     prune_hint: str = "prune=true",
@@ -153,9 +163,9 @@ def push(
     push never deletes anything.
 
     With no client a dry run still works: the calendar isn't checked and every
-    event shows as new.
+    event shows as new. With ``plans_dir``, the plan must be inside that folder.
     """
-    plan = load_plan(plan_path, start=start)  # PlanError before any network call
+    plan = load_plan(plan_path, start=start, root=plans_dir)  # PlanError before any network call
     return _sync(
         plan,
         client=client,
@@ -228,6 +238,7 @@ def _edit_and_sync(
     dry_run: bool,
     now: dt.date,
     apply_hint: str,
+    plans_dir: str | None,
 ) -> str:
     """Edit plan.yaml, validate the result, then (unless a dry run) write it and push with prune.
 
@@ -235,15 +246,18 @@ def _edit_and_sync(
     file is written first (it is the source of truth; git can undo it), then the
     calendar follows. If the push fails, the error says how to finish it.
     """
+    ensure_inside(plan_path, plans_dir)  # before reading anything
     with open(plan_path, encoding="utf-8") as f:
         src = f.read()
-    current = load_plan(plan_path)  # the file must be valid before we change it
+    current = load_plan(plan_path, root=plans_dir)  # the file must be valid before we change it
     try:
         edited = make_edit(src, current)
     except EditError as e:
         raise PlannerError(str(e)) from None
     base_dir = os.path.dirname(os.path.abspath(plan_path))
-    new_plan = build_plan(yaml.safe_load(edited.text), base_dir)  # PlanError if the edit broke it
+    new_plan = build_plan(
+        yaml.safe_load(edited.text), base_dir, root=plans_dir
+    )  # PlanError if broken
 
     changes = "".join(
         difflib.unified_diff(
@@ -304,6 +318,7 @@ def move(
     to_week: int | None = None,
     swap: bool = False,
     dry_run: bool = True,
+    plans_dir: str | None = None,
     today: Callable[[], dt.date] = dt.date.today,
     apply_hint: str = "dry_run=false",
 ) -> str:
@@ -322,7 +337,13 @@ def move(
         return edited
 
     return _edit_and_sync(
-        plan_path, make_edit, client=client, dry_run=dry_run, now=now, apply_hint=apply_hint
+        plan_path,
+        make_edit,
+        client=client,
+        dry_run=dry_run,
+        now=now,
+        apply_hint=apply_hint,
+        plans_dir=plans_dir,
     )
 
 
@@ -333,6 +354,7 @@ def shift(
     weeks: int = 1,
     from_week: int | None = None,
     dry_run: bool = True,
+    plans_dir: str | None = None,
     today: Callable[[], dt.date] = dt.date.today,
     apply_hint: str = "dry_run=false",
 ) -> str:
@@ -359,7 +381,13 @@ def shift(
         return edit.shift_remaining(src, weeks=weeks, from_week=start_at)
 
     return _edit_and_sync(
-        plan_path, make_edit, client=client, dry_run=dry_run, now=now, apply_hint=apply_hint
+        plan_path,
+        make_edit,
+        client=client,
+        dry_run=dry_run,
+        now=now,
+        apply_hint=apply_hint,
+        plans_dir=plans_dir,
     )
 
 

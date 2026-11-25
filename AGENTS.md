@@ -74,6 +74,13 @@ stack, never only in `server.py` or `cli.py`.
    It never goes in errors, reprs or output. Tests use `FAKE_KEY` and check
    it doesn't leak.
 
+5. **Optional plans folder.** With `INTERVALS_ICU_PLANS_DIR` set
+   (`config.find_plans_dir`), `plan.ensure_inside`/`is_inside` refuse a plan
+   file, workouts folder or `.zwo` whose realpath is outside it, before
+   reading. Front ends pass `plans_dir=find_plans_dir()` to `planner.push`,
+   `move` and `shift`. An unfilled `${user_config.plans_dir}` placeholder
+   counts as unset.
+
 ## intervals.icu API facts (verified against the OpenAPI spec at `https://intervals.icu/api/v1/docs`)
 
 - Athlete id `0` means the athlete who owns the credentials. Auth is HTTP

@@ -13,7 +13,7 @@ from mcp.types import ToolAnnotations
 
 from . import __version__, guide, planner
 from .client import ApiError, IntervalsClient
-from .config import find_api_key
+from .config import find_api_key, find_plans_dir
 from .plan import PlanError
 
 INSTRUCTIONS = """\
@@ -30,6 +30,13 @@ source of truth.
 To write a new plan or change a plan's workouts, call plan_guide first: it has
 the plan.yaml format, the .zwo rules and the steps to follow.
 """
+
+PLANS_DIR = find_plans_dir()
+if PLANS_DIR:
+    INSTRUCTIONS += (
+        f"\nPlans must be saved in {PLANS_DIR} (each plan in its own folder, with its"
+        "\nworkouts/ inside): the tools refuse plan files anywhere else.\n"
+    )
 
 mcp = MCPServer(
     "intervals-icu-planner",
@@ -88,7 +95,14 @@ def push_plan(
         prune: true = also delete stale events from today on (shown as - in the diff).
     """
     return _run(
-        lambda c: planner.push(plan_yaml, client=c, start=start_date, dry_run=dry_run, prune=prune)
+        lambda c: planner.push(
+            plan_yaml,
+            client=c,
+            start=start_date,
+            dry_run=dry_run,
+            prune=prune,
+            plans_dir=find_plans_dir(),
+        )
     )
 
 
@@ -188,7 +202,15 @@ def move_workout(
     """
     return _run(
         lambda c: planner.move(
-            plan_yaml, week, day, to_day, client=c, to_week=to_week, swap=swap, dry_run=dry_run
+            plan_yaml,
+            week,
+            day,
+            to_day,
+            client=c,
+            to_week=to_week,
+            swap=swap,
+            dry_run=dry_run,
+            plans_dir=find_plans_dir(),
         )
     )
 
@@ -217,7 +239,12 @@ def shift_plan(
     """
     return _run(
         lambda c: planner.shift(
-            plan_yaml, client=c, weeks=weeks, from_week=from_week, dry_run=dry_run
+            plan_yaml,
+            client=c,
+            weeks=weeks,
+            from_week=from_week,
+            dry_run=dry_run,
+            plans_dir=find_plans_dir(),
         )
     )
 

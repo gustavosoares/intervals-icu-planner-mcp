@@ -28,9 +28,10 @@ ZWO = """<?xml version="1.0" encoding="UTF-8"?>
 
 @pytest.fixture(autouse=True)
 def _no_ambient_key(monkeypatch, tmp_path):
-    """Tests never pick up a real key from the environment or a .env file."""
+    """Tests never pick up a real key (or plans folder) from the environment or a .env file."""
     monkeypatch.delenv("INTERVALS_ICU_API_KEY", raising=False)
     monkeypatch.delenv("INTERVALS_API_KEY", raising=False)
+    monkeypatch.delenv("INTERVALS_ICU_PLANS_DIR", raising=False)
     monkeypatch.chdir(tmp_path)
 
 

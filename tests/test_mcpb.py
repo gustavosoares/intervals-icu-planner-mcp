@@ -33,7 +33,17 @@ def test_api_key_is_sensitive_and_passed_in_the_env_var_the_server_reads():
     m = manifest()
     assert m["user_config"]["api_key"]["sensitive"] is True
     env = m["server"]["mcp_config"]["env"]
-    assert env == {config.ENV_VAR: "${user_config.api_key}"}
+    assert env[config.ENV_VAR] == "${user_config.api_key}"
+
+
+def test_optional_plans_folder_is_passed_in_the_env_var_the_server_reads():
+    m = manifest()
+    field = m["user_config"]["plans_dir"]
+    assert field["type"] == "directory"
+    assert field["required"] is False
+    env = m["server"]["mcp_config"]["env"]
+    assert env[config.PLANS_DIR_ENV_VAR] == "${user_config.plans_dir}"
+    assert set(env) == {config.ENV_VAR, config.PLANS_DIR_ENV_VAR}
 
 
 def test_entry_point_runs_the_server():

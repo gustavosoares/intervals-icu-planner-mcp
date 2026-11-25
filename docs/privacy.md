@@ -24,7 +24,8 @@ intervals.icu API:
 - **Activities:** completed rides (time, distance, power, heart rate,
   training load), read only.
 - **Local files:** the plan and workout files you point it at. Moving or
-  shifting a plan edits that `plan.yaml`.
+  shifting a plan edits that `plan.yaml`. If you set a plans folder, it
+  refuses files outside it.
 
 ## Where your data goes
 
