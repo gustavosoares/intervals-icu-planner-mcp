@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-25
+
 ### Added
 - Sign in with intervals.icu: no API key needed. Ask Claude to connect (the
   new `connect` tool) or run `intervals-icu-planner login`, then approve in
@@ -113,7 +115,8 @@ First release on PyPI.
   load is realistic.
 - `*.zip` is git-ignored, so exported workout archives aren't committed by mistake.
 
-[Unreleased]: https://github.com/gustavosoares/intervals-icu-planner-mcp/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/gustavosoares/intervals-icu-planner-mcp/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/gustavosoares/intervals-icu-planner-mcp/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/gustavosoares/intervals-icu-planner-mcp/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/gustavosoares/intervals-icu-planner-mcp/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/gustavosoares/intervals-icu-planner-mcp/releases/tag/v0.1.0
