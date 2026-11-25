@@ -1,12 +1,12 @@
 [build-system]
-requires = ["hatchling>=1.24"]
+requires = ["hatchling>=1.24", "hatch-fancy-pypi-readme>=24.1"]
 build-backend = "hatchling.build"
 
 [project]
 name = "intervals-icu-planner-mcp"
 version = "0.1.0"
 description = "MCP server and CLI to push, inspect and remove whole training plans on intervals.icu, safely"
-readme = "README.md"
+dynamic = ["readme"]
 license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.10"
@@ -48,6 +48,21 @@ intervals-icu-planner = "intervals_icu_planner_mcp.cli:main"
 Homepage = "https://github.com/gustavosoares/intervals-icu-planner-mcp"
 Issues = "https://github.com/gustavosoares/intervals-icu-planner-mcp/issues"
 Changelog = "https://github.com/gustavosoares/intervals-icu-planner-mcp/blob/main/CHANGELOG.md"
+
+# PyPI can't resolve the README's relative links and images: point them at GitHub.
+[tool.hatch.metadata.hooks.fancy-pypi-readme]
+content-type = "text/markdown"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+path = "README.md"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '!\[([^\]]*)\]\((?!https?://)([^)]+)\)'
+replacement = '![\1](https://raw.githubusercontent.com/gustavosoares/intervals-icu-planner-mcp/main/\2)'
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '\]\((?!https?://|#)([^)]+)\)'
+replacement = '](https://github.com/gustavosoares/intervals-icu-planner-mcp/blob/main/\1)'
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/intervals_icu_planner_mcp"]

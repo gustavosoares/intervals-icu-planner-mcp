@@ -35,3 +35,26 @@ CI runs the same checks on Python 3.10 to 3.13.
 - **If you change the plan models in `plan.py`**, regenerate the schema:
   `intervals-icu-planner schema > schemas/plan.schema.json`.
 - Add a line to `CHANGELOG.md` under the next version.
+
+## Releasing (maintainer only)
+
+Releases go to PyPI from the manual `publish` workflow, with
+[trusted publishing](https://docs.pypi.org/trusted-publishers/) (no token).
+
+One-time setup:
+
+1. On PyPI and TestPyPI, add a pending trusted publisher: project
+   `intervals-icu-planner-mcp`, owner `gustavosoares`, repository
+   `intervals-icu-planner-mcp`, workflow `publish.yml`, environment `pypi`
+   (TestPyPI: `testpypi`).
+2. In the repo's Settings → Environments, create `pypi` and `testpypi`, each
+   with the maintainer as required reviewer and deployment limited to `main`.
+
+Each release:
+
+1. Bump `version` in `pyproject.toml` and move the changelog's Unreleased
+   entries under the new version. Merge that to `main`.
+2. Actions → publish → Run workflow on `main` with target `testpypi`, and
+   check the page and `uvx --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ intervals-icu-planner-mcp`.
+3. Run it again with target `pypi`. It checks, builds, uploads, then tags
+   `v<version>` and creates the GitHub release.
