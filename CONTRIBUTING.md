@@ -55,7 +55,8 @@ Versions come from git tags (`hatch-vcs`): there's no version number in
 is a deliberate, approved run of the `publish` workflow. Pick the number with
 [semver](https://semver.org/): a fix is 0.1.1, a new tool or option 0.2.0.
 
-Each release:
+Each release (in Claude Code, `/release-pypi [version]` walks through these
+steps, and pauses for you to merge and to approve each upload):
 
 1. Rename the changelog's `## [Unreleased]` heading to `## [0.2.0] - <date>`,
    add a fresh empty Unreleased above it, and merge that to `main`. That

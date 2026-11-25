@@ -13,6 +13,8 @@ All notable changes to this project are documented here. The format follows
   The `publish` workflow takes the version as an input, checks it's newer than
   the last release and has a changelog section, and uses that section as the
   GitHub release notes.
+- A `/release-pypi` Claude Code skill for maintainers, which walks through a
+  release: changelog PR, TestPyPI, PyPI, and a smoke test of each upload.
 
 ## [0.1.0] - 2026-11-25
 

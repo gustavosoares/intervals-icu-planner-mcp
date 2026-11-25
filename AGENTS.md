@@ -162,6 +162,8 @@ stack, never only in `server.py` or `cli.py`.
   from the `v*` git tag via hatch-vcs, so never add a `version` to
   pyproject.toml or hard-code `__version__`. Feature PRs add to the
   changelog's Unreleased section; they don't pick a version number.
+  Releases run through the `/release-pypi` skill (`.claude/skills/`), which
+  only the maintainer starts. Never approve a deployment or merge for them.
 - To run an unreleased branch, use
   `uvx --from git+https://github.com/gustavosoares/intervals-icu-planner-mcp@<branch> intervals-icu-planner-mcp`.
   On `main` before the MCP PR merged, that entry point was the old CLI.
