@@ -167,18 +167,18 @@ Anything that writes shows you a dry run first and waits for your OK.
 
 ### Building a plan from your goals
 
-Claude writes the plan as files (a `plan.yaml` and `.zwo` workouts) and then
-pushes them, so it needs somewhere to save them. Claude Code can do that
-directly. In Claude Desktop, add a filesystem extension that can write to a
-folder of your choice. For best results, tell Claude to use the example plan
-as its model:
+Claude learns the plan format from the server's `plan_guide` tool, then
+writes the plan as files (a `plan.yaml` and `.zwo` workouts) and pushes them.
+So it needs somewhere to save them: Claude Code can do that directly, and in
+Claude Desktop, add a filesystem extension that can write to a folder of your
+choice.
 
 > I'm riding a 100 km sportive on 14 June and have about 6 hours a week:
 > short indoor rides Tuesday to Thursday, a long ride at the weekend. Build me
-> a plan in `~/training/sportive`, using
-> `/path/to/intervals-icu-planner-mcp/examples/winter-base-12wk` as the model
-> for the plan.yaml and the workouts (targets in % of FTP). Then do a dry-run
-> push and show me the diff.
+> a plan in `~/training/sportive`, then do a dry-run push and show me the diff.
+
+Claude will usually ask about your goal and week first. Workouts use % of
+FTP, so set your FTP in intervals.icu (or your training app).
 
 Every plan and workout is checked before anything is sent, so a mistake in
 what Claude wrote is reported, not uploaded. Your answers about fitness and
@@ -197,6 +197,7 @@ coach's or doctor's advice.
 | `move_workout(plan_yaml, week, day, to_day, to_week?, swap=false, dry_run=true)` | Move one session to another day: edits plan.yaml, then syncs with prune | only with `dry_run=false` |
 | `shift_plan(plan_yaml, weeks=1, from_week?, dry_run=true)` | Push the rest of the plan back N weeks (illness, travel); past weeks stay | only with `dry_run=false` |
 | `list_library(folder?)` | Your intervals.icu workout library: folders and plans with their workouts | no |
+| `plan_guide()` | How to write a plan: the plan.yaml format and schema, the .zwo rules, examples and steps. Claude reads it before writing a plan | no |
 
 `plan_yaml` is a path to the file. Everything also works from the
 command line: see [docs/cli.md](docs/cli.md).

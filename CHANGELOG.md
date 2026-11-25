@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- `plan_guide` / `guide`: how to write a plan, for Claude: the plan.yaml
+  format and JSON Schema, the .zwo rules, a tested example of each, and the
+  steps from a goal to a dry-run push. The server's instructions tell Claude
+  to read it before writing a plan, so "build me a plan for my sportive" no
+  longer needs the example plan as a model.
+
 ### Changed
 - README: example prompts for building a plan from your goals, reviewing a
   race or a week, and checking fitness before adjusting the plan, plus how to

@@ -11,7 +11,7 @@ from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 from mcp.types import ToolAnnotations
 
-from . import __version__, planner
+from . import __version__, guide, planner
 from .client import ApiError, IntervalsClient
 from .config import find_api_key
 from .plan import PlanError
@@ -26,6 +26,9 @@ modify events whose uid was created by a plan (planner-<plan_id>-w<NN>-<day>);
 nothing else on the calendar is touched. move_workout and shift_plan also edit
 the plan.yaml file (its diff is in the dry run), because the file is the
 source of truth.
+
+To write a new plan or change a plan's workouts, call plan_guide first: it has
+the plan.yaml format, the .zwo rules and the steps to follow.
 """
 
 mcp = MCPServer(
@@ -228,6 +231,15 @@ def list_library(folder: str | None = None) -> str:
         folder: Optional text; only folders whose name contains it.
     """
     return _run(lambda c: planner.library(client=c, folder=folder))
+
+
+@mcp.tool(annotations=ToolAnnotations(read_only_hint=True, open_world_hint=False))
+def plan_guide() -> str:
+    """How to write a training plan: the plan.yaml format (with its JSON Schema), the
+    .zwo workout rules, an example of each, and the steps from the athlete's goal to a
+    pushed plan. Call this before writing or changing plan files. Read-only, offline.
+    """
+    return guide.plan_guide()
 
 
 def main() -> None:

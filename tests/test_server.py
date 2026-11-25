@@ -29,6 +29,7 @@ def test_tools_and_parameters():
         "move_workout",
         "shift_plan",
         "list_library",
+        "plan_guide",
     }
     props = {n: tool.input_schema["properties"] for n, tool in t.items()}
     assert set(props["push_plan"]) == {"plan_yaml", "start_date", "dry_run", "prune"}
@@ -49,6 +50,7 @@ def test_tools_and_parameters():
     assert set(props["shift_plan"]) == {"plan_yaml", "weeks", "from_week", "dry_run"}
     assert props["shift_plan"]["weeks"]["default"] == 1
     assert set(props["list_library"]) == {"folder"}
+    assert set(props["plan_guide"]) == set()
 
 
 def test_write_tools_default_to_dry_run():
@@ -67,8 +69,18 @@ def test_annotations():
     assert t["push_plan"].annotations.destructive_hint is True  # can delete with prune
     for name in ("move_workout", "shift_plan"):
         assert t[name].annotations.destructive_hint is True
-    for name in ("get_planned", "get_fitness", "get_activities", "list_library"):
+    for name in ("get_planned", "get_fitness", "get_activities", "list_library", "plan_guide"):
         assert t[name].annotations.read_only_hint is True
+
+
+def test_plan_guide_works_offline():
+    res = call("plan_guide")
+    assert not res.is_error
+    assert "# Writing a training plan" in res.content[0].text
+
+
+def test_instructions_point_to_plan_guide():
+    assert "plan_guide" in server.INSTRUCTIONS
 
 
 def test_push_plan_offline_dry_run():
