@@ -9,6 +9,10 @@ All notable changes to this project are documented here. The format follows
 ### Changed
 - Install from PyPI: `uvx intervals-icu-planner-mcp`. The README and docs no
   longer need the GitHub URL, and explain upgrading and pinning a version.
+- The version comes from the git tag (hatch-vcs) instead of `pyproject.toml`.
+  The `publish` workflow takes the version as an input, checks it's newer than
+  the last release and has a changelog section, and uses that section as the
+  GitHub release notes.
 
 ## [0.1.0] - 2026-11-25
 
