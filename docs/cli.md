@@ -23,6 +23,7 @@ intervals-icu-planner move plan.yaml 3 tue wed --swap --apply
 intervals-icu-planner shift plan.yaml --weeks 1            # dry run: push the rest back a week
 intervals-icu-planner library [--folder winter]            # list the workout library
 intervals-icu-planner schema                               # print the plan.yaml JSON Schema
+intervals-icu-planner guide                                # how to write a plan and its .zwo files
 ```
 
 Every write command is a dry run unless you pass `--apply`.

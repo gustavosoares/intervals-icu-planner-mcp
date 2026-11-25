@@ -9,6 +9,7 @@ intervals-icu-planner move plan.yaml WEEK DAY TO_DAY [--to-week N] [--swap] [--a
 intervals-icu-planner shift plan.yaml [--weeks N] [--from-week N] [--apply]
 intervals-icu-planner library [--folder NAME]
 intervals-icu-planner schema
+intervals-icu-planner guide
 """
 
 from __future__ import annotations
@@ -17,7 +18,7 @@ import argparse
 import json
 import sys
 
-from . import __version__, planner
+from . import __version__, guide, planner
 from .client import ApiError, IntervalsClient
 from .config import find_api_key
 from .plan import PlanError, plan_json_schema
@@ -82,6 +83,7 @@ def build_parser() -> argparse.ArgumentParser:
     lib.add_argument("--folder", help="only folders whose name contains this")
 
     sub.add_parser("schema", help="print the plan.yaml JSON Schema")
+    sub.add_parser("guide", help="print how to write a plan.yaml and its .zwo workouts")
     return ap
 
 
@@ -89,6 +91,9 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     if args.command == "schema":
         print(json.dumps(plan_json_schema(), indent=2))
+        return EXIT_OK
+    if args.command == "guide":
+        print(guide.plan_guide(), end="")
         return EXIT_OK
 
     key = find_api_key()

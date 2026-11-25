@@ -65,6 +65,13 @@ def test_schema_command(capsys):
     assert json.loads(capsys.readouterr().out) == plan_json_schema()
 
 
+def test_guide_command(capsys):
+    from intervals_icu_planner_mcp.guide import plan_guide
+
+    assert main(["guide"]) == 0
+    assert capsys.readouterr().out == plan_guide()
+
+
 def test_push_prune_without_apply_is_still_a_dry_run(monkeypatch, capsys):
     monkeypatch.setenv("INTERVALS_ICU_API_KEY", "k")
     stale = {

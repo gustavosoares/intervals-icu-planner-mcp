@@ -6,6 +6,13 @@ A plan is one `plan.yaml` plus a folder of `.zwo` workout files. It describes
 a training block once (week templates, per-week changes, recovery weeks),
 and the server expands it into dated calendar events.
 
+## Let Claude write it
+
+The `plan_guide` tool (CLI: `intervals-icu-planner guide`) gives Claude
+this format in short form, with the JSON Schema, the `.zwo` rules and an
+example of each. So you can describe your goal and let Claude write the plan,
+then check the dry run.
+
 ## Editor support
 
 A [JSON Schema](../schemas/plan.schema.json) is included. Editors with the YAML

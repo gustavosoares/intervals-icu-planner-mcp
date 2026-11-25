@@ -36,6 +36,7 @@ src/intervals_icu_planner_mcp/
   diff.py      plan vs calendar diff + rendering
   edit.py      round-trip edits of plan.yaml (ruamel.yaml): move a session, shift weeks
   planner.py   operations shared by both front ends: push/planned/delete/move/shift/fitness/activities/library
+  guide.py     plan_guide text for models: built from plan.py's schema and zwo.py's rules, examples tested
   server.py    MCP tools (thin wrappers over planner)
   cli.py       argparse front end (thin wrapper over planner)
   config.py    API key lookup
