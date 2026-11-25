@@ -70,4 +70,6 @@ steps, and pauses for you to merge and to approve each upload):
 3. Release it: the same command with `-f target=pypi`, and approve. The
    workflow checks the version is new and in the changelog, runs the tests,
    builds with that version, uploads, then tags `v0.2.0` and creates the
-   GitHub release.
+   GitHub release, with the Claude Desktop extension
+   (`intervals-icu-planner-0.2.0.mcpb`, built by `scripts/build_mcpb.py`)
+   attached.

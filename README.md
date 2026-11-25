@@ -98,6 +98,18 @@ you can ask Claude how the block is going.
 
 ## Quick start
 
+### Claude Desktop: one-click install
+
+1. **Get an API key**: intervals.icu → **Settings** → **Developer Settings** →
+   **API key**.
+2. **Download `intervals-icu-planner-<version>.mcpb`** from the
+   [latest release](https://github.com/gustavosoares/intervals-icu-planner-mcp/releases/latest)
+   and double-click it (or drag it into Claude Desktop → Settings → Extensions).
+3. **Click Install and paste your API key.** Claude Desktop stores it in your
+   system keychain and sets everything else up.
+
+### Claude Code, or a manual setup
+
 1. **Get an API key**: intervals.icu → **Settings** → **Developer Settings** →
    **API key**. On a Mac, keep it in the Keychain rather than in a config
    file: see [docs/setup.md](docs/setup.md).
@@ -250,6 +262,7 @@ Details in [docs/safety.md](docs/safety.md).
 - [Training apps and activities](docs/training-apps.md): Zwift, MyWhoosh, Garmin, ERG mode, Strava limits
 - [CLI](docs/cli.md): every command
 - [Safety design](docs/safety.md)
+- [Privacy](docs/privacy.md): what data goes where (nowhere but intervals.icu and your AI app)
 - [How it works](docs/how-it-works.md): architecture and intervals.icu API notes
 - [Troubleshooting](docs/troubleshooting.md)
 - [Contributing](CONTRIBUTING.md) and [Changelog](CHANGELOG.md)

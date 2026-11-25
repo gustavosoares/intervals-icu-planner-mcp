@@ -1,0 +1,54 @@
+{
+  "manifest_version": "0.4",
+  "name": "intervals-icu-planner",
+  "display_name": "intervals.icu Planner",
+  "version": "0.0.0",
+  "description": "Plan a whole training block with Claude and put it on your intervals.icu calendar, safely.",
+  "long_description": "Push, inspect, move and remove whole training plans (a plan.yaml plus .zwo workouts) on your intervals.icu calendar, and read your fitness and completed rides. Every write is a dry run first and only touches events the plan created.",
+  "author": {
+    "name": "Gustavo Soares Souza",
+    "url": "https://github.com/gustavosoares"
+  },
+  "homepage": "https://github.com/gustavosoares/intervals-icu-planner-mcp",
+  "documentation": "https://github.com/gustavosoares/intervals-icu-planner-mcp#readme",
+  "support": "https://github.com/gustavosoares/intervals-icu-planner-mcp/issues",
+  "license": "MIT",
+  "keywords": ["intervals.icu", "cycling", "training-plan", "zwo", "zwift"],
+  "server": {
+    "type": "uv",
+    "entry_point": "src/server.py",
+    "mcp_config": {
+      "command": "uv",
+      "args": ["run", "--directory", "${__dirname}", "src/server.py"],
+      "env": {
+        "INTERVALS_ICU_API_KEY": "${user_config.api_key}"
+      }
+    }
+  },
+  "user_config": {
+    "api_key": {
+      "type": "string",
+      "title": "intervals.icu API key",
+      "description": "intervals.icu → Settings → Developer Settings → API key. Stored in your system keychain.",
+      "sensitive": true,
+      "required": true
+    }
+  },
+  "tools": [
+    {"name": "push_plan", "description": "Validate a plan, diff it against the calendar, and add or update its events (dry run by default)"},
+    {"name": "get_planned", "description": "List planned events, optionally only one plan's"},
+    {"name": "delete_plan", "description": "Remove every event a plan created, nothing else (dry run by default)"},
+    {"name": "get_fitness", "description": "Fitness, fatigue and form per day"},
+    {"name": "get_activities", "description": "Completed rides: time, distance, load, power, heart rate"},
+    {"name": "move_workout", "description": "Move one session to another day in plan.yaml and on the calendar (dry run by default)"},
+    {"name": "shift_plan", "description": "Push the rest of a plan back by N weeks (dry run by default)"},
+    {"name": "list_library", "description": "Your intervals.icu workout library"},
+    {"name": "plan_guide", "description": "How to write a plan: the plan.yaml format, .zwo rules and examples"}
+  ],
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "python": ">=3.10"
+    }
+  }
+}

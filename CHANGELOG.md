@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- Claude Desktop extension: each release attaches an
+  `intervals-icu-planner-<version>.mcpb`. Double-click it, paste your API key
+  (Claude Desktop keeps it in the system keychain), done: no uv, terminal or
+  JSON config needed.
+- Privacy policy (`docs/privacy.md`).
+
 ### Changed
 - README: pictures of a pushed plan in MyWhoosh and on a Garmin head unit.
 

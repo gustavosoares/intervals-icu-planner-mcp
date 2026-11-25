@@ -44,6 +44,8 @@ schemas/plan.schema.json        generated, committed; a test fails if it drifts
 docs/                           user docs; README stays short and links here
 docs/images/                    screenshots: no personal data (crop avatars, weight, HR, fitness numbers)
 examples/winter-base-12wk/      public example plan + workouts
+mcpb/                           Claude Desktop extension: manifest + a pyproject that installs the PyPI release
+scripts/build_mcpb.py           stamps the version into mcpb/ and packs dist/intervals-icu-planner-<v>.mcpb
 ```
 
 Keep the layering: new behaviour goes in `planner.py`, or lower in the
@@ -147,6 +149,8 @@ stack, never only in `server.py` or `cli.py`.
   names or clubs. It also checks the example's file count; update that when
   workouts are added or removed.
 - Changing `plan.py` models means regenerating `schemas/plan.schema.json`.
+- Adding or renaming an MCP tool means updating `tools` in `mcpb/manifest.json`
+  (`tests/test_mcpb.py` checks they match).
 
 ## Environment gotchas (macOS)
 
