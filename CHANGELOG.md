@@ -7,6 +7,9 @@ All notable changes to this project are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- A manual `publish` workflow that uploads to TestPyPI or PyPI with trusted
+  publishing, restricted to the maintainer, then tags the release. The PyPI
+  page's README links point to GitHub.
 - `move_workout` / `move`: move one session to another day (or swap two),
   by editing plan.yaml and syncing with prune. Comments and layout are kept.
 - `shift_plan` / `shift`: push the rest of a plan back N weeks. Past weeks
