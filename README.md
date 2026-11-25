@@ -156,6 +156,18 @@ you can ask Claude how the block is going.
    (or run `uvx --from intervals-icu-planner-mcp intervals-icu-planner login`).
    Prefer an API key? See [docs/setup.md](docs/setup.md).
 
+### Other AI apps
+
+It's a standard MCP server, so any app that can run a local (stdio) MCP server
+should work, such as Cursor, VS Code with GitHub Copilot, Windsurf or Zed. Add it in
+that app's MCP settings with the command `uvx intervals-icu-planner-mcp`, then ask
+it to connect to intervals.icu. Only Claude Desktop and Claude Code are tested so
+far; reports of other apps are welcome in the
+[issues](https://github.com/gustavosoares/intervals-icu-planner-mcp/issues).
+
+ChatGPT isn't supported: it only connects to remote MCP servers, and this one runs
+on your computer.
+
 ## Try it
 
 Clone the repo for the [example plan](examples/winter-base-12wk/) (12 weeks
