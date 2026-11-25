@@ -6,6 +6,9 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+- README: pictures of a pushed plan in MyWhoosh and on a Garmin head unit.
+
 ## [0.2.0] - 2026-11-25
 
 ### Added

@@ -36,6 +36,12 @@ you say yes. Then the whole block lands on your intervals.icu calendar, and
 from there each day's workout shows up in **Zwift, MyWhoosh or on your
 Garmin**, ready to ride.
 
+<p align="center">
+  <img src="docs/images/mywhoosh-calendar.png" alt="The plan's workouts synced to the MyWhoosh calendar">
+  <br>
+  <img src="docs/images/garmin-training-plan.jpg" alt="Today's workout from the plan on a Garmin head unit" width="240">
+</p>
+
 **See how you did**
 
 - *"I raced on Sunday. How did I do?"*
