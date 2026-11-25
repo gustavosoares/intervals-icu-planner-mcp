@@ -12,6 +12,11 @@ All notable changes to this project are documented here. The format follows
   (Claude Desktop keeps it in the system keychain), done: no uv, terminal or
   JSON config needed.
 - Privacy policy (`docs/privacy.md`).
+- Optional plans folder (`INTERVALS_ICU_PLANS_DIR`, or the extension's
+  **Plans folder** setting): the tools refuse plans and workouts outside it,
+  including through `..` or symlinks.
+- README: what Claude Desktop's "access to everything on your computer"
+  install warning means, and what the extension actually touches.
 
 ### Changed
 - README: pictures of a pushed plan in MyWhoosh and on a Garmin head unit.

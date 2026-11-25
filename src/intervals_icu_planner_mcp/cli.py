@@ -20,7 +20,7 @@ import sys
 
 from . import __version__, guide, planner
 from .client import ApiError, IntervalsClient
-from .config import find_api_key
+from .config import find_api_key, find_plans_dir
 from .plan import PlanError, plan_json_schema
 
 EXIT_OK, EXIT_API, EXIT_INPUT = 0, 1, 2
@@ -106,6 +106,7 @@ def main(argv: list[str] | None = None) -> int:
                 start=args.start,
                 dry_run=not args.apply,
                 prune=args.prune,
+                plans_dir=find_plans_dir(),
                 apply_hint="--apply",
                 prune_hint="--prune",
             )
@@ -131,6 +132,7 @@ def main(argv: list[str] | None = None) -> int:
                 client=client,
                 to_week=args.to_week,
                 swap=args.swap,
+                plans_dir=find_plans_dir(),
                 dry_run=not args.apply,
                 apply_hint="--apply",
             )
@@ -140,6 +142,7 @@ def main(argv: list[str] | None = None) -> int:
                 client=client,
                 weeks=args.weeks,
                 from_week=args.from_week,
+                plans_dir=find_plans_dir(),
                 dry_run=not args.apply,
                 apply_hint="--apply",
             )

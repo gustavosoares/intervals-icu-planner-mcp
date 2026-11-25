@@ -106,7 +106,24 @@ you can ask Claude how the block is going.
    [latest release](https://github.com/gustavosoares/intervals-icu-planner-mcp/releases/latest)
    and double-click it (or drag it into Claude Desktop → Settings → Extensions).
 3. **Click Install and paste your API key.** Claude Desktop stores it in your
-   system keychain and sets everything else up.
+   system keychain and sets everything else up. Optionally, pick a **plans
+   folder**: the planner then refuses to read or edit plans anywhere else.
+
+> **About the install warning.** Claude Desktop says the extension gets
+> "access to everything on your computer". It shows that for every extension
+> that isn't in its reviewed directory, because extensions run as ordinary
+> programs on your computer, as any MCP server does. Here is what this one
+> actually does:
+>
+> - It talks only to intervals.icu (your calendar, workout library, fitness
+>   and rides), over HTTPS, with your API key. Nothing goes to the author or
+>   anyone else ([privacy](docs/privacy.md)).
+> - It reads only the plan files you point it at, and edits only the
+>   `plan.yaml` you ask it to move or shift. With a plans folder set, it
+>   refuses anything outside that folder.
+> - It's open source: the extension installs this repository's
+>   [PyPI release](https://pypi.org/project/intervals-icu-planner-mcp/), and
+>   the safety rules are [tested](docs/safety.md).
 
 ### Claude Code, or a manual setup
 

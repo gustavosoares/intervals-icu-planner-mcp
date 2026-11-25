@@ -98,6 +98,15 @@ claude mcp add -s user intervals-icu-planner -e INTERVALS_ICU_API_KEY=your-key-h
   uvx intervals-icu-planner-mcp
 ```
 
+## Limit it to a plans folder (optional)
+
+Set `INTERVALS_ICU_PLANS_DIR` to a folder (for example `~/training`), or pick
+a **Plans folder** in the Claude Desktop extension's settings. The tools then
+only read and edit plans whose `plan.yaml`, workouts folder and `.zwo` files
+are inside it, following symlinks, and refuse anything else before reading
+it. Unset, plans can be anywhere. Claude is told the folder, so it saves new
+plans there.
+
 ## Upgrading
 
 `uvx` caches the version it installed first. To move to a new release, run

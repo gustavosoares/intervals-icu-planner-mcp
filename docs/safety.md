@@ -56,3 +56,12 @@ it in the macOS Keychain.
 `move_workout` and `shift_plan` show the file diff in the dry run, never touch
 past sessions, refuse to overwrite a file that changed meanwhile, and write it
 atomically. `list_library` only reads.
+
+## 6. Optionally, plans only from one folder
+
+With `INTERVALS_ICU_PLANS_DIR` set (the **Plans folder** setting of the
+Claude Desktop extension), a plan is refused unless `plan.yaml`, its workouts
+folder and every `.zwo` resolve inside that folder. Paths are compared after
+following symlinks, so `..` and links can't escape it, and the check runs
+before the file is read. This limits what the tools will do; like any MCP
+server, the program itself still runs with your user's permissions.

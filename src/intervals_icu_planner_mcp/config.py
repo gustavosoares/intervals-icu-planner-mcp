@@ -8,6 +8,7 @@ from collections.abc import Callable, Mapping
 
 ENV_VAR = "INTERVALS_ICU_API_KEY"
 LEGACY_ENV_VAR = "INTERVALS_API_KEY"  # used by 0.0.x; still read, with a warning
+PLANS_DIR_ENV_VAR = "INTERVALS_ICU_PLANS_DIR"
 
 
 def parse_dotenv(text: str) -> dict[str, str]:
@@ -57,3 +58,16 @@ def find_api_key(
                 warn(f"warning: {LEGACY_ENV_VAR} is deprecated, rename it to {ENV_VAR}")
             return value
     return None
+
+
+def find_plans_dir(env: Mapping[str, str] | None = None) -> str | None:
+    """The folder plans must live in, from ``INTERVALS_ICU_PLANS_DIR``; None means anywhere.
+
+    An empty value, or a ``${user_config...}`` placeholder that Claude Desktop
+    left unfilled because the optional setting is blank, means unset.
+    """
+    env = os.environ if env is None else env
+    value = env.get(PLANS_DIR_ENV_VAR, "").strip()
+    if not value or value.startswith("${"):
+        return None
+    return os.path.expanduser(value)
