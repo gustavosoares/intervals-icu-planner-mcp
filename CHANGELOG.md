@@ -6,6 +6,10 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+- The README leads with what a whole plan gives you, and explains when to use
+  intervals.icu's official connector instead (or alongside).
+
 ## [0.4.0] - 2026-11-25
 
 ### Added
