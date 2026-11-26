@@ -11,7 +11,7 @@
 
 ![One week of the example plan on the intervals.icu calendar](docs/images/calendar-week.png)
 
-<!-- TODO: add a short GIF of Claude showing a dry-run diff and applying it -->
+<!-- TODO: add a short GIF: "I was sick, push everything back a week" -> dry-run diff -> "apply it" -->
 
 ## What it's for
 
@@ -73,28 +73,57 @@ gives Claude a few safe tools for your intervals.icu calendar. Claude
 decides when to use them, and asks you before writing anything.
 </details>
 
-## Why plan-level
+## Why a plan, not single workouts
 
-General intervals.icu MCP servers expose the API one event at a time: create
-an event, delete an event, list activities. That works for a single workout.
-For a 12-week block it means dozens of separate writes, with nothing tying
-them together and nothing that shows you what will change first.
+Putting one workout on a calendar is easy. A 12-week block is dozens of them,
+and the hard part is everything after the first push: getting sick, swapping
+days, making the build weeks harder, starting again next season. With this
+server, Claude works on the plan as a whole:
 
-This server works on **whole plans**:
+- **Change the whole block in one sentence, and see exactly what moves.**
+  *"Push everything back a week"* or *"make every build week's Tuesday
+  harder"* is one change to the plan. You get a per-date diff (`+` new,
+  `~` updated, `=` unchanged, `!` stale), and nothing is written until you
+  say yes.
+- **Pick up where you left off, in any chat.** The plan's structure (week
+  templates, recovery weeks, per-week changes) is saved in a `plan.yaml`, so a
+  new conversation, or another AI app, sees what the plan is meant to be, not
+  just a scatter of calendar events.
+- **Keep it, reuse it, share it.** Next season, change the start date and push
+  again. Give a friend the folder. Keep it in git and see exactly what changed
+  after you got sick.
+- **Bring your own workouts.** Workouts are plain `.zwo` files, the format
+  Zwift uses, so you can use ones you already have.
+- **Only its own events, and reversible.** Each event carries a uid,
+  `planner-<plan_id>-w<NN>-<day>`, and nothing without one is touched.
+  Pushing an edited plan updates events in place, never duplicates them, and
+  with `prune=true` removes the ones you took out. `delete_plan` removes
+  exactly what a plan created.
 
-- **One file, one plan.** You describe the block once in a `plan.yaml`
-  (week templates, per-week changes, recovery weeks) plus `.zwo` workouts.
-  Edit the file and push again: events are updated in place, never duplicated.
-- **Diff before write.** Every write tool is a dry run by default and returns
-  a per-date diff (`+` new, `~` updated, `=` unchanged, `!` stale).
-- **A plan only touches its own events.** Each event carries a uid,
-  `planner-<plan_id>-w<NN>-<day>`, and the server never modifies an event
-  without one.
-- **Reversible.** `delete_plan` removes exactly the events a plan created, and
-  `push_plan` with `prune=true` removes the ones you took out of the plan.
+This works because the plan is a file you own. Claude writes it for you, so
+you never have to touch YAML unless you want to.
 
 It also reads your fitness (CTL / ATL / Form) and completed activities, so
 you can ask Claude how the block is going.
+
+## This or the official connector?
+
+intervals.icu runs its own [MCP connector](https://www.intervals.icu/connector/):
+hosted by intervals.icu, part of the Supporter plan, and it works in Claude,
+ChatGPT and Gemini. The two do different jobs (as of November 2026):
+
+- **Use the official connector** to talk about your training (readiness,
+  wellness, activity detail, zones and settings), to add the odd workout, for
+  coaching, and when you don't want to install anything.
+- **Use this planner** for a whole block you'll keep reshaping and reusing:
+  - you edit the plan and push it again, and changed sessions are updated in
+    place and dropped ones removed (the connector's `apply_training_plan` only
+    adds sessions);
+  - you have `.zwo` files (the connector has no workout-file import);
+  - you want a dry-run diff before every write, including single moves;
+  - you want it free, local, and scriptable from a [CLI](docs/cli.md).
+- **Or use both.** This planner only touches events carrying its own uid, so
+  you can connect both: analyse your rides with one, plan with the other.
 
 ## Quick start
 
@@ -166,7 +195,8 @@ far; reports of other apps are welcome in the
 [issues](https://github.com/gustavosoares/intervals-icu-planner-mcp/issues).
 
 ChatGPT isn't supported: it only connects to remote MCP servers, and this one runs
-on your computer.
+on your computer. In ChatGPT, use intervals.icu's
+[official connector](https://www.intervals.icu/connector/) instead.
 
 ## Try it
 
@@ -299,7 +329,6 @@ Details in [docs/safety.md](docs/safety.md).
 ## Roadmap
 
 - Activity analysis: planned vs completed, compliance per week
-- OAuth and the streamable HTTP transport, for claude.ai custom connectors
 - Writing to the workout library (import or remove workouts in one dedicated folder)
 
 ## A note on AI assistance
